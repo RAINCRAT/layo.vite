@@ -2241,7 +2241,8 @@ body::after {
 /* ============================ H. 页面加载遮罩与顶部进度条 ============================ */
 
 /* ---- 全屏加载遮罩 ----
- * 关键样式（定位/层级/底色）由组件内联，本区块负责装饰与过渡。
+ * 遮罩 DOM 与关键样式（定位/层级/底色/大百分比/进度条）由 head 内联加载器脚本
+ * （theme/loader.js）在 HTML 解析阶段创建，本区块负责装饰与过渡。
  * 明日方舟加载风格：居中大百分比 + 横跨屏幕贴底进度条 + 顶部警示条纹，保持简洁。 */
 
 .page-loader {
@@ -2267,9 +2268,10 @@ body::after {
   pointer-events: none;
 }
 
-/* 居中大百分比 */
+/* 居中大百分比：用无衬线字体栈（Rajdhani → 系统 sans），避免 Google Fonts 未就绪时
+ * 回退到 --ak-font-serif 的中文衬线数字（宋体风格），数字保持 tabular-nums 等宽 */
 .page-loader__pct {
-  font-family: var(--ak-font-serif);
+  font-family: var(--ak-font-sans);
   font-size: 76px;
   font-weight: 700;
   line-height: 1;
@@ -2324,27 +2326,9 @@ body::after {
   box-shadow: 0 0 12px var(--vp-c-shadow-danger);
 }
 
-/* 横跨屏幕的进度条（抬离底边，与回到顶部按钮的 24px 边距对齐） */
-.page-loader__track {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 24px;
-  height: 8px;
-  border-top: 1px solid var(--vp-c-border);
-  background-color: var(--vp-c-bg-mute);
-  overflow: hidden;
-}
-
-.page-loader__bar {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  background: linear-gradient(90deg, var(--ak-dark-blue), var(--ak-primary));
-  transition: width 0.05s linear;
-  will-change: width;
-}
+/* 横跨屏幕的进度条（抬离底边 24px，与回到顶部按钮对齐）。
+ * track/bar 的定位/尺寸/底色/渐变等关键样式由 head 内联加载器脚本（theme/loader.js）
+ * 内联（保证主题 CSS 未加载时进度条也能即时显示），此处仅保留伪元素装饰与过渡。 */
 
 /* 斜向高光带（流动） */
 .page-loader__bar::after {
@@ -2393,6 +2377,50 @@ body::after {
   background: linear-gradient(90deg, var(--ak-dark-blue), var(--ak-primary));
   box-shadow: 0 0 8px var(--vp-c-shadow-brand);
   transition: width 0.25s ease;
+}
+
+/* ---- 背景加载日志：遮罩背景底部淡色小字（宽度撑满窗口，无面板底色/边框/标题/着色，仅低对比信息，不干扰主体） ---- */
+.page-loader__debug {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 44px;
+  z-index: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 0;
+  padding: 0 16px;
+  list-style: none;
+  font-family: var(--ak-font-mono, monospace);
+  font-size: 10px;
+  line-height: 1.5;
+  letter-spacing: 0.04em;
+  color: var(--vp-c-text-3);
+  pointer-events: none;
+  /* max-height: 40vh;
+  overflow: hidden; */
+}
+
+.page-loader__debug li {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.page-loader__debug-method,
+.page-loader__debug-status,
+.page-loader__debug-ms {
+  flex: none;
+}
+
+.page-loader__debug-url {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ---- 遮罩结束后的内容分步入场（错峰浮现，营造分步加载观感） ---- */

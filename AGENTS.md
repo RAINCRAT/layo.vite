@@ -21,7 +21,7 @@
 
 ```
 .vitepress/
-  config.js        # 站点配置（唯一生效的配置入口；head 注入的加载看门狗脚本：主 JS 未启动时 8s 后给遮罩加"刷新重试"兜底，应用水合后由 LoadingOverlay 调 __LAYO_BOOTED__() 解除）
+  config.js        # 站点配置（唯一生效的配置入口；head 注入首屏加载遮罩独立内联脚本：进度/加载日志/失败态均不依赖主 JS 与主题 CSS，HTML 解析即显示，水合后由 LoadingOverlay 调 __LAYO_BOOTED__() 汇报，替代原 8s 静态看门狗）
   seo.js           # SEO/GEO 工具模块：URL 派生、页面 head 注入、robots/llms 生成
   seo-config.js    # SEO 独立配置：所有 SEO 变量集中于此，默认沿用 config.js 的值
   theme/
@@ -31,7 +31,8 @@
     cookie-consent.js # 第三方 Cookie 同意管理器（vanilla-cookieconsent）+ Clarity 同意同步
     CookieConsentButton.vue # 导航栏右上角手动弹出 Cookie 偏好设置的按钮（Layout.vue 的 nav-bar-content-after 插槽引入）
     BackToTop.vue  # 全站右下角回到顶部按钮（VPBackToTop 类，基础样式见 style.css）
-    LoadingOverlay.vue # 页面加载遮罩 + 路由顶部进度条：首次连接全屏遮罩（大百分比 + 横跨屏幕贴底进度条），进度由真实异步节点驱动（文档就绪/水合/样式/字体/全部资源，各占权重，失败或断网切换"刷新重试"错误态）；路由切换显示顶部细进度条；遮罩结束给 <html> 加 is-loaded 触发内容分步入场。基础样式见 style.css 区块 H
+    loader.js      # 首屏加载遮罩独立内联脚本生成器（config.js head 注入，随 HTML 解析执行：大百分比/贴底进度条/背景加载日志/失败态/兜底超时，进度算法与 fetch·XHR·PerformanceObserver 日志全在本文件，不依赖主 JS 与主题 CSS）
+    LoadingOverlay.vue # 路由切换顶部细进度条 + 水合汇报：首次全屏遮罩已由 loader.js 独立接管，本组件仅驱动路由异步 chunk 的顶部进度条并在挂载时调 __LAYO_BOOTED__()
 index.md           # 首页（hero + features）
 blogs/             # 博客站：index.md（VPBHome 文章列表）+ posts/（文章）+ authors/（作者）+ archives.md（VPBArchives）+ tags.md（VPBTags）
 docs/              # 文档页
@@ -61,7 +62,9 @@ layo.vite/                       # 仓库根（git 追踪文件全集，构建�
 │       ├── style.css            # 全局样式与 ak-ui 组件替换（保留双份规则）
 │       ├── cookie-consent.js    # 第三方 Cookie 同意管理器（vanilla-cookieconsent）+ Clarity 同意同步
 │       ├── CookieConsentButton.vue # 导航栏右上角手动弹出 Cookie 偏好设置按钮（nav-bar-content-after 插槽引入）
-│       └── BackToTop.vue        # 全站右下角回到顶部按钮（VPBackToTop 类，基础样式见 style.css）
+│       ├── BackToTop.vue        # 全站右下角回到顶部按钮（VPBackToTop 类，基础样式见 style.css）
+│       ├── loader.js            # 首屏加载遮罩独立内联脚本生成器（config.js head 注入）
+│       └── LoadingOverlay.vue   # 路由切换顶部细进度条 + 水合汇报（__LAYO_BOOTED__）
 ├── blogs/                       # 博客站
 │   ├── index.md                 # VPBHome 文章列表
 │   ├── archives.md              # VPBArchives 归档
@@ -96,7 +99,7 @@ layo.vite/                       # 仓库根（git 追踪文件全集，构建�
 8. 构建产物与缓存已被 `.gitignore` 忽略，不要提交。忽略范围覆盖多目录构建场景：根目录（`.vitepress/dist`、`.vitepress/cache`、`.vitepress/.temp`）与子目录（`./blogs/.vitepress/`、`./docs/.vitepress/` 的 `dist`/`cache`）。
 9. 网络资源（如 ak-ui CDN CSS、Google 字体 Noto Sans/Serif SC）通过 `config.js` 的 `head` 配置注入。
 10. 每次完成任务后检查是否需要更新 `AGENTS.md`。
-11. **全站主题变量映射集中在 `style.css` 顶部**：`--ak-*` 调色板/字体变量 → `--vp-c-*`（明/暗双主题）、`--vp-button-*`、`--vp-home-hero-*`、`--vp-custom-block-*`。新增全站风格化时优先改变量映射，避免硬编码颜色；文档风格化（导航/侧边栏/代码块/表格/引用/滚动条）位于 style.css 的"组件细节"区块；明日方舟强化装饰（卡片斜切角/角标、背景扫描线与六边形徽标、导航警示条纹、按钮光带动效）集中在 style.css 末尾的"明日方舟风格化增强"区块，新增强化逻辑追加到该区块；**工单系统（Element Plus）方舟化样式集中在文件末尾的"G. 工单系统（Element Plus）方舟化"区块**——以 `.is-tickets-page` 前缀限定（Element Plus 仅存在于工单页），内容为直角化/主题色映射、表格扫描线与 hover 蓝缘、尖角标签、按钮/输入/分页/描述列表、终端标题行，新增工单相关 el 组件样式追加到该区块；**加载遮罩与路由进度条（LoadingOverlay）样式集中在文件末尾的"H. 页面加载遮罩与顶部进度条"区块**（全屏遮罩装饰/顶部警示条纹/贴底进度条/失败态/loader-fade 过渡/html.is-loaded 内容分步入场/prefers-reduced-motion 减弱动画），新增相关样式追加到该区块；导航栏 40px 方形图标按钮（Cookie 偏好/社交链接）统一描边样式的"导航图标按钮规范"区块，新增同类按钮把类名加入其公共选择器即可继承。
+11. **全站主题变量映射集中在 `style.css` 顶部**：`--ak-*` 调色板/字体变量 → `--vp-c-*`（明/暗双主题）、`--vp-button-*`、`--vp-home-hero-*`、`--vp-custom-block-*`。新增全站风格化时优先改变量映射，避免硬编码颜色；文档风格化（导航/侧边栏/代码块/表格/引用/滚动条）位于 style.css 的"组件细节"区块；明日方舟强化装饰（卡片斜切角/角标、背景扫描线与六边形徽标、导航警示条纹、按钮光带动效）集中在 style.css 末尾的"明日方舟风格化增强"区块，新增强化逻辑追加到该区块；**工单系统（Element Plus）方舟化样式集中在文件末尾的"G. 工单系统（Element Plus）方舟化"区块**——以 `.is-tickets-page` 前缀限定（Element Plus 仅存在于工单页），内容为直角化/主题色映射、表格扫描线与 hover 蓝缘、尖角标签、按钮/输入/分页/描述列表、终端标题行，新增工单相关 el 组件样式追加到该区块；**加载遮罩与路由进度条（LoadingOverlay）样式集中在文件末尾的"H. 页面加载遮罩与顶部进度条"区块**（全屏遮罩装饰/顶部警示条纹/贴底进度条/背景加载日志（淡色终端小字，无面板装饰）/失败态/loader-fade 过渡/html.is-loaded 内容分步入场/prefers-reduced-motion 减弱动画），遮罩 DOM 与进度条 track/bar 的定位/尺寸/底色/渐变关键样式由 head 内联加载器脚本（theme/loader.js）内联（保证主题 CSS 未加载时即时可见），新增相关样式追加到该区块；导航栏 40px 方形图标按钮（Cookie 偏好/社交链接）统一描边样式的"导航图标按钮规范"区块，新增同类按钮把类名加入其公共选择器即可继承。
 12. **ak-color 约束：不创建 ak-ui 未定义的 `--ak-*` 颜色变量**。ak-ui 官方调色板仅有 blue/dark-blue/light-blue/yellow/gray/dark/low/basic/primary/secondary/advanced；全站 danger/红色系统一复用既有 `--ak-accent`（#f6540e）与 `--vp-c-shadow-danger`（明暗映射）。新色一律改从上述变量派生，严禁自造。
 13. **404 页面主题约定**：
     - 根标识：`theme/Layout.vue` 依据 `page.isNotFound` 给根 Layout 注入 `is-404-page` 类；所有 404 专属样式以 `.is-404-page` / `.NotFound` 为前缀限定，避免污染全站。

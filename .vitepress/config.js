@@ -4,6 +4,7 @@ import { processData } from '@chunge16/vitepress-blogs-theme/config';
 import { zhCN } from 'date-fns/locale';
 import { buildPageHeadTags, buildSeoArtifacts, transformSitemapItems, isPageExcluded } from './seo.js';
 import { createSeoConfig, expandNewlines } from './seo-config.js';
+import { loaderHeadScript } from './theme/loader.js';
 
 // 站点配置唯一来源：.env（VITE_SITE_* 站点基础、VITE_SEO_* SEO 独立覆盖），代码不硬编码
 const env = loadEnv(process.env.NODE_ENV ?? 'production', process.cwd(), '');
@@ -66,9 +67,9 @@ export default defineConfig({
     [
       'script',
       {},
-      // 加载看门狗兜底：若主 JS 包加载失败/水合未发生（遮罩会永远卡住），8s 后注入"刷新重试"入口。
-      // 应用水合完成后由 LoadingOverlay 调用 __LAYO_BOOTED__() 解除。
-      `(function(){var armed=true;window.__LAYO_BOOTED__=function(){armed=false;};setTimeout(function(){if(!armed)return;var d=document.createElement('div');d.id='loader-watchdog';d.setAttribute('style','position:fixed;inset:0;z-index:9999999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:var(--vp-c-bg,#f7f9fc);color:var(--vp-c-text-1,#1e2430);font-family:var(--ak-font-sans,sans-serif);text-align:center');d.innerHTML='<p style="margin:0;font-size:22px;font-weight:700;letter-spacing:0.18em;color:#f6540e">加载失败</p><p style="margin:0;font-size:13px;letter-spacing:0.12em;color:#8b94a6">资源加载超时或无响应，请检查网络后重试</p><button id="loader-watchdog-btn" style="margin-top:6px;padding:8px 28px;border:1px solid #f6540e;color:#f6540e;background:transparent;cursor:pointer;font-family:inherit;font-size:14px;letter-spacing:0.18em">刷新重试</button>';document.body.appendChild(d);document.getElementById('loader-watchdog-btn').addEventListener('click',function(){window.location.reload();});},8000);})();`
+      // 首屏加载遮罩独立内联脚本（进度/加载日志/失败态），随 HTML 同步解析执行，
+      // 不依赖主 JS 与主题 CSS；替代原 8s 静态看门狗（详见 theme/loader.js）
+      loaderHeadScript
     ]
   ],
 
