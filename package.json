@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "date-fns": "^4.4.0",
+    "element-plus": "^2.14.4",
     "vanilla-cookieconsent": "^3.1.0"
   }
 }

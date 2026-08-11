@@ -18,7 +18,8 @@ import { join } from 'node:path';
  */
 export const SEO_EXCLUDE_PAGES = {
   pages: new Set(['AGENTS.md', 'readme.md']),
-  dirs: [],
+  // 工单文件存放在 assets/tickets/，其页面属于内部工单数据，不进入 sitemap / llms，也不注入 canonical / OG / JSON-LD
+  dirs: ['assets/tickets/'],
   // 文件名（basename）含 example 的页面，任意层级；不匹配目录（目录条目转为 xxx/index.md，basename 为 index.md）
   patterns: [/(^|\/)[^/]*example[^/]*\.md$/],
 };
