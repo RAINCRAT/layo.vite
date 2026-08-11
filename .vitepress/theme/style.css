@@ -1728,7 +1728,7 @@ body::after {
   bottom: 0;
   z-index: -1;
   height: 3px;
-  background: repeating-linear-gradient(-45deg, var(--ak-yellow) 0 8px, #000 8px 16px);
+  background: repeating-linear-gradient(-45deg, var(--ak-low) 0 8px, #000 8px 16px);
   background-size: 22.63px 100%;
   opacity: 0.4;
   pointer-events: none;
@@ -2004,217 +2004,234 @@ body::after {
   color: var(--ak-accent) !important;
 }
 
-/* ============================ G. 页面加载遮罩与顶部进度条 ============================ */
+/* ============================ G. 工单系统（Element Plus）方舟化 ============================ */
 
-/* ---- 全屏加载遮罩 ----
- * 关键样式（定位/层级/底色）由组件内联，本区块负责装饰与过渡。
- * 明日方舟加载风格：居中大百分比 + 横跨屏幕贴底进度条 + 顶部警示条纹，保持简洁。 */
+/* 作用域：Element Plus 仅存在于工单页（列表 /support/tickets/ 与详情 /assets/tickets/），
+ * Layout.vue 已为这两类路由在根元素注入 is-tickets-page 标记，故以 .is-tickets-page 前缀限定即可全局生效。 */
 
-.page-loader {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--ak-font-sans);
+/* ---- G1. 基础变量映射：直角化 + 主题色对齐 ak 蓝 + 明暗边界对齐 VitePress ---- */
+.is-tickets-page {
+  --el-border-radius-base: 0;
+  --el-border-radius-small: 0;
+  /* Element 的 primary light/dark 变体是编译期常量，需按 ak 蓝重新派生，保证 hover/active 同色系 */
+  --el-color-primary: var(--ak-primary);
+  --el-color-primary-light-3: color-mix(in srgb, var(--ak-primary) 72%, #fff);
+  --el-color-primary-light-5: color-mix(in srgb, var(--ak-primary) 50%, #fff);
+  --el-color-primary-light-7: color-mix(in srgb, var(--ak-primary) 30%, #fff);
+  --el-color-primary-light-8: color-mix(in srgb, var(--ak-primary) 20%, #fff);
+  --el-color-primary-light-9: color-mix(in srgb, var(--ak-primary) 10%, #fff);
+  --el-color-primary-dark-2: color-mix(in srgb, var(--ak-primary) 80%, #000);
+  /* 边界与文本：跟随 VitePress 明/暗变量 */
+  --el-border-color: var(--vp-c-border);
+  --el-border-color-light: var(--vp-c-border);
+  --el-border-color-lighter: var(--vp-c-border-soft);
+  --el-border-color-extra-light: var(--vp-c-border-soft);
+  --el-fill-color-light: var(--vp-c-bg-soft);
+  --el-fill-color-lighter: var(--vp-c-bg-mute);
+  --el-bg-color: var(--vp-c-bg);
+  --el-bg-color-overlay: var(--vp-c-bg-soft);
+  --el-text-color-primary: var(--vp-c-text-1);
+  --el-text-color-regular: var(--vp-c-text-2);
+  --el-text-color-secondary: var(--vp-c-text-3);
+  --el-text-color-placeholder: var(--vp-c-text-3);
+  --el-input-bg-color: var(--vp-c-bg-soft);
 }
 
-/* 顶部黄黑警示条纹（与导航分隔条同款流动） */
-.page-loader::after {
-  content: "";
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: -1;
-  height: 6px;
-  background: repeating-linear-gradient(-45deg, var(--ak-yellow) 0 8px, #000 8px 16px);
-  background-size: 22.63px 100%;
-  opacity: 0.5;
-  animation: ak-hazard-scroll 0.9s linear infinite;
-  pointer-events: none;
+/* ---- G2. 表格：直角 + 描边 + 扫描线斑马纹 + hover 蓝缘 ---- */
+.is-tickets-page .el-table {
+  border: 1px solid var(--el-border-color);
+  border-radius: 0;
+  --el-table-border-color: var(--vp-c-border-soft);
+  --el-table-header-bg-color: var(--vp-c-bg-soft);
+  --el-table-header-text-color: var(--vp-c-text-2);
+  --el-table-row-hover-bg-color: transparent;
+  --el-table-bg-color: transparent;
+  --el-table-tr-bg-color: transparent;
 }
 
-/* 居中大百分比 */
-.page-loader__pct {
-  font-family: var(--ak-font-serif);
-  font-size: 76px;
-  font-weight: 700;
-  line-height: 1;
-  color: var(--ak-primary);
-  text-shadow: 0 0 28px var(--vp-c-shadow-brand);
-  font-variant-numeric: tabular-nums;
-}
-
-/* 加载失败状态：错误提示 + 刷新重试（danger 红，与 404 警戒主题呼应） */
-.page-loader__fail {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  padding: 24px 36px;
-  text-align: center;
-}
-
-.page-loader__fail-title {
-  margin: 0;
-  font-family: var(--ak-font-serif);
-  font-size: 24px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  color: var(--ak-accent);
-  text-shadow: 0 0 20px var(--vp-c-shadow-danger);
-}
-
-.page-loader__fail-hint {
-  margin: 0;
+/* 表头：深色底 + 底部 2px ak 蓝主分隔线 + 字距 */
+.is-tickets-page .el-table th.el-table__cell {
+  border-bottom: 2px solid var(--ak-primary);
   font-size: 13px;
-  letter-spacing: 0.12em;
-  color: var(--vp-c-text-3);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--vp-c-text-2);
 }
 
-.page-loader__retry {
-  margin-top: 6px;
-  padding: 8px 28px;
-  border: 1px solid var(--ak-accent);
-  background-color: transparent;
-  color: var(--ak-accent);
+/* 斑马纹：极淡蓝色扫描线（透明度 0.04，CRT 质感，克制） */
+.is-tickets-page .el-table .el-table__body tr.el-table__row--striped > td.el-table__cell {
+  background: repeating-linear-gradient(180deg, transparent 0 3px, rgba(74, 171, 234, 0.04) 3px 4px);
+}
+
+/* hover 行：淡蓝底 + 左侧 2px ak 蓝竖线（box-shadow inset，不改变盒尺寸） */
+.is-tickets-page .el-table .el-table__body tr.el-table__row:hover > td.el-table__cell {
+  background: rgba(74, 171, 234, 0.08) !important;
+  box-shadow: inset 2px 0 0 var(--ak-primary);
+}
+
+/* 工单号（首列）：等宽终端字体 + ak 蓝 */
+.is-tickets-page .el-table .el-table__body td.el-table__cell:first-child {
+  font-family: var(--ak-font-mono, monospace);
+  letter-spacing: 0.03em;
+  color: var(--ak-primary);
+}
+
+/* ---- G3. 标签：状态实心斜切角 / 优先级渠道描边直角 ---- */
+.is-tickets-page .el-tag {
+  border-radius: 0;
   font-family: var(--ak-font-sans);
-  font-size: 14px;
-  letter-spacing: 0.18em;
-  cursor: pointer;
-  transition: background-color 0.2s, color 0.2s, box-shadow 0.2s;
+  letter-spacing: 0.04em;
 }
 
-.page-loader__retry:hover {
-  background-color: var(--ak-accent);
+/* 实心标签：右侧斜切角（呼应全站斜切角语言）。
+ * 描边（plain）标签不用 clip-path，否则右侧描边会被斜切裁掉一段。 */
+.is-tickets-page .el-tag:not(.el-tag--plain) {
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 50%, calc(100% - 8px) 100%, 0 100%);
+  padding-right: 12px;
+}
+
+/* 实心（状态）：黄黑警戒 / ak 蓝 / 完成绿 / 关闭灰 */
+.is-tickets-page .el-tag--warning:not(.el-tag--plain) {
+  background-color: var(--ak-yellow);
+  border-color: var(--ak-yellow);
+  color: #000;
+}
+
+.is-tickets-page .el-tag--primary:not(.el-tag--plain) {
+  background-color: var(--ak-primary);
+  border-color: var(--ak-primary);
   color: #fff;
-  box-shadow: 0 0 12px var(--vp-c-shadow-danger);
 }
 
-/* 横跨屏幕的进度条（抬离底边，与回到顶部按钮的 24px 边距对齐） */
-.page-loader__track {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 24px;
-  height: 8px;
-  border-top: 1px solid var(--vp-c-border);
-  background-color: var(--vp-c-bg-mute);
-  overflow: hidden;
+.is-tickets-page .el-tag--danger:not(.el-tag--plain) {
+  background-color: var(--ak-accent);
+  border-color: var(--ak-accent);
+  color: #fff;
 }
 
-.page-loader__bar {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  background: linear-gradient(90deg, var(--ak-dark-blue), var(--ak-primary));
-  transition: width 0.05s linear;
-  will-change: width;
+.is-tickets-page .el-tag--success:not(.el-tag--plain) {
+  background-color: var(--el-color-success);
+  border-color: var(--el-color-success);
+  color: #fff;
 }
 
-/* 斜向高光带（流动） */
-.page-loader__bar::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.35) 0 6px, transparent 6px 12px);
-  background-size: 16.97px 100%;
-  animation: ak-hazard-scroll 0.8s linear infinite;
+.is-tickets-page .el-tag--info:not(.el-tag--plain) {
+  background-color: var(--vp-c-text-3);
+  border-color: var(--vp-c-text-3);
+  color: #fff;
 }
 
-/* 黄色前沿标记 */
-.page-loader__bar::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  right: 0;
-  width: 6px;
-  background: var(--ak-yellow);
-  box-shadow: 0 0 10px rgba(255, 216, 2, 0.8);
+/* 描边（优先级/渠道）：透明底 + 语义色描边与文字 */
+.is-tickets-page .el-tag--plain {
+  background-color: transparent;
 }
 
-/* 遮罩淡出过渡 */
-.loader-fade-leave-active {
-  transition: opacity 0.5s ease;
+.is-tickets-page .el-tag--warning.el-tag--plain {
+  color: var(--ak-yellow);
+  border-color: var(--ak-yellow);
 }
 
-.loader-fade-leave-to {
-  opacity: 0;
+.is-tickets-page .el-tag--primary.el-tag--plain {
+  color: var(--ak-primary);
+  border-color: var(--ak-primary);
 }
 
-/* ---- 路由异步加载顶部细进度条 ---- */
-.route-progress {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  z-index: 9999991;
-  pointer-events: none;
+.is-tickets-page .el-tag--danger.el-tag--plain {
+  color: var(--ak-accent);
+  border-color: var(--ak-accent);
 }
 
-.route-progress__bar {
-  height: 100%;
-  background: linear-gradient(90deg, var(--ak-dark-blue), var(--ak-primary));
+.is-tickets-page .el-tag--success.el-tag--plain {
+  color: var(--el-color-success);
+  border-color: var(--el-color-success);
+}
+
+.is-tickets-page .el-tag--info.el-tag--plain {
+  color: var(--vp-c-text-3);
+  border-color: var(--vp-c-text-3);
+}
+
+/* ---- G4. 按钮：直角 + 主按钮 ak 蓝（hover/active 用 G1 派生的 light/dark 变体） ---- */
+.is-tickets-page .el-button {
+  border-radius: 0;
+  font-family: var(--ak-font-sans);
+  letter-spacing: 0.06em;
+}
+
+.is-tickets-page .el-button--primary {
+  --el-button-bg-color: var(--ak-primary);
+  --el-button-border-color: var(--ak-primary);
+  --el-button-hover-bg-color: var(--el-color-primary-light-5);
+  --el-button-hover-border-color: var(--el-color-primary-light-5);
+  --el-button-active-bg-color: var(--el-color-primary-dark-2);
+  --el-button-active-border-color: var(--el-color-primary-dark-2);
+}
+
+/* ---- G5. 输入/下拉：直角 + focus ak 蓝辉光 ---- */
+.is-tickets-page .el-input__wrapper,
+.is-tickets-page .el-select__wrapper {
+  border-radius: 0;
+}
+
+.is-tickets-page .el-input__wrapper.is-focus,
+.is-tickets-page .el-select__wrapper.is-focused {
+  box-shadow:
+    0 0 0 1px var(--ak-primary) inset,
+    0 0 0 4px rgba(74, 171, 234, 0.12);
+}
+
+/* ---- G6. 分页：直角描边方块 + active ak 蓝实心 ---- */
+.is-tickets-page .el-pagination {
+  --el-pagination-button-radius: 0;
+}
+
+.is-tickets-page .el-pagination.is-background .el-pager li {
+  border: 1px solid var(--vp-c-border);
+  border-radius: 0;
+  background-color: transparent;
+  color: var(--vp-c-text-2);
+}
+
+.is-tickets-page .el-pagination.is-background .el-pager li.is-active {
+  background-color: var(--ak-primary);
+  border-color: var(--ak-primary);
+  color: #fff;
   box-shadow: 0 0 8px var(--vp-c-shadow-brand);
-  transition: width 0.25s ease;
 }
 
-/* ---- 遮罩结束后的内容分步入场（错峰浮现，营造分步加载观感） ---- */
-html.is-loaded .VPNavBar {
-  animation: ak-rise-in 0.45s ease both;
+.is-tickets-page .el-pagination.is-background .el-pager li:hover {
+  border-color: var(--ak-primary);
+  color: var(--ak-primary);
 }
 
-html.is-loaded .VPHomeHero {
-  animation: ak-rise-in 0.45s 0.08s ease both;
+.is-tickets-page .el-pagination .btn-prev,
+.is-tickets-page .el-pagination .btn-next {
+  border: 1px solid var(--vp-c-border);
+  border-radius: 0;
+  background-color: transparent;
 }
 
-html.is-loaded .VPHomeFeatures {
-  animation: ak-rise-in 0.45s 0.16s ease both;
+.is-tickets-page .el-pagination .btn-prev:hover,
+.is-tickets-page .el-pagination .btn-next:hover {
+  border-color: var(--ak-primary);
+  color: var(--ak-primary);
 }
 
-html.is-loaded .VPDoc {
-  animation: ak-rise-in 0.45s 0.1s ease both;
+/* ---- G7. 详情页元信息（el-descriptions）：label 深色底 + ak 蓝 ---- */
+.is-tickets-page .el-descriptions__label {
+  background-color: var(--vp-c-bg-soft);
+  color: var(--ak-primary);
+  font-weight: 600;
+  letter-spacing: 0.05em;
 }
 
-html.is-loaded .vpb-shell {
-  animation: ak-rise-in 0.45s 0.1s ease both;
-}
-
-html.is-loaded .VPFooter {
-  animation: ak-rise-in 0.45s 0.26s ease both;
-}
-
-@keyframes ak-rise-in {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-/* 减弱动态效果：关停流动/入场动画 */
-@media (prefers-reduced-motion: reduce) {
-  .page-loader__bar::after,
-  .page-loader::after {
-    animation: none !important;
-  }
-
-  .loader-fade-leave-active {
-    transition-duration: 0.1s;
-  }
-
-  html.is-loaded .VPNavBar,
-  html.is-loaded .VPHomeHero,
-  html.is-loaded .VPHomeFeatures,
-  html.is-loaded .VPDoc,
-  html.is-loaded .vpb-shell,
-  html.is-loaded .VPFooter {
-    animation: none !important;
-  }
+/* ---- G8. 列表页终端标题行（纯 CSS 伪元素，呼应详情页时间轴 "// 事项碎片"） ---- */
+.is-tickets-page .ticket-demo::before {
+  content: "// WE DO THE DIRTY WORK. WE KNOW THE SECRETS.";
+  display: block;
+  margin-bottom: 10px;
+  font-family: var(--ak-font-mono, monospace);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  color: var(--ak-primary);
 }

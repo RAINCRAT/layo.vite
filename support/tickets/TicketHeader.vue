@@ -59,7 +59,7 @@ function onBack() {
     <div class="ticket-header__tags">
       <el-tag :type="statusTag[frontmatter.status]" size="small">{{ frontmatter.status }}</el-tag>
       <el-tag :type="priorityTag[frontmatter.priority]" size="small" effect="plain">
-        {{ frontmatter.priority }}优先级
+        优先级：{{ frontmatter.priority }}
       </el-tag>
     </div>
 
@@ -86,10 +86,14 @@ function onBack() {
 .ticket-header__back {
   padding: 0;
   margin-bottom: 8px;
+  font-family: var(--ak-font-sans);
+  letter-spacing: 0.04em;
 }
 
 .ticket-header__title {
   margin: 8px 0 12px;
+  padding-left: 14px;
+  border-left: 4px solid var(--ak-primary);
   font-size: 32px;
   font-weight: 600;
   line-height: 40px;
