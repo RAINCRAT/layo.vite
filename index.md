@@ -1,7 +1,9 @@
 ---
 # https://vitepress.dev/reference/default-theme-home-page
 layout: home
-# 首页 <title> 保持纯站名（站点级 titleTemplate 会给所有页加「| 后缀」，首页为站名本身不再追加）
+# 首页 <title>：不追加站点级「| 后缀」，改为自定义描述性标题。
+# 纯站名（LAYOSERVE泠域存储）字符数过短，会触发搜索引擎「标题太短」提示（Bing 建议 50-60 字符）。
+title: "LAYOSERVE泠域存储 | RAINCRAT雨绘巷从属企划"
 titleTemplate: false
 
 hero:
