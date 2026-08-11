@@ -21,16 +21,17 @@
 
 ```
 .vitepress/
-  config.js        # 站点配置（唯一生效的配置入口）
+  config.js        # 站点配置（唯一生效的配置入口；head 注入的加载看门狗脚本：主 JS 未启动时 8s 后给遮罩加"刷新重试"兜底，应用水合后由 LoadingOverlay 调 __LAYO_BOOTED__() 解除）
   seo.js           # SEO/GEO 工具模块：URL 派生、页面 head 注入、robots/llms 生成
   seo-config.js    # SEO 独立配置：所有 SEO 变量集中于此，默认沿用 config.js 的值
   theme/
     index.js       # 主题入口（唯一生效的入口，extends DefaultTheme，注册 VPB 组件，enhanceApp 初始化 Cookie 同意）
-    Layout.vue     # 组合布局：博客文章/作者页插槽（VPB）+ 导航栏 Cookie 按钮（nav-bar-content-after）+ 全站回到顶部（layout-bottom）+ 工单页 is-tickets-page 标记（加宽内容区）
+    Layout.vue     # 组合布局：博客文章/作者页插槽（VPB）+ 导航栏 Cookie 按钮（nav-bar-content-after）+ 全站回到顶部（layout-bottom）+ 工单页 is-tickets-page 标记（加宽内容区）+ 全站加载遮罩（LoadingOverlay）
     style.css      # 全局样式与 ak-ui 组件替换（保留双份规则）
     cookie-consent.js # 第三方 Cookie 同意管理器（vanilla-cookieconsent）+ Clarity 同意同步
     CookieConsentButton.vue # 导航栏右上角手动弹出 Cookie 偏好设置的按钮（Layout.vue 的 nav-bar-content-after 插槽引入）
     BackToTop.vue  # 全站右下角回到顶部按钮（VPBackToTop 类，基础样式见 style.css）
+    LoadingOverlay.vue # 页面加载遮罩 + 路由顶部进度条：首次连接全屏遮罩（大百分比 + 横跨屏幕贴底进度条），进度由真实异步节点驱动（文档就绪/水合/样式/字体/全部资源，各占权重，失败或断网切换"刷新重试"错误态）；路由切换显示顶部细进度条；遮罩结束给 <html> 加 is-loaded 触发内容分步入场。基础样式见 style.css 区块 G
 index.md           # 首页（hero + features）
 blogs/             # 博客站：index.md（VPBHome 文章列表）+ posts/（文章）+ authors/（作者）+ archives.md（VPBArchives）+ tags.md（VPBTags）
 docs/              # 文档页

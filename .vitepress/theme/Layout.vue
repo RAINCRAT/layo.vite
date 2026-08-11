@@ -12,6 +12,7 @@ import {
 } from '@chunge16/vitepress-blogs-theme';
 import CookieConsentButton from './CookieConsentButton.vue';
 import BackToTop from './BackToTop.vue';
+import LoadingOverlay from './LoadingOverlay.vue';
 import TicketHeader from '../../support/tickets/TicketHeader.vue';
 
 const { Layout } = DefaultTheme;
@@ -50,4 +51,6 @@ const isTicketsPage = computed(() => route.path.startsWith('/support/') || route
       <BackToTop />
     </template>
   </Layout>
+  <!-- 全站加载遮罩 + 路由顶部进度条（首次连接全屏，路由切换细进度条） -->
+  <LoadingOverlay />
 </template>
