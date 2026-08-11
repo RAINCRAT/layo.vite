@@ -20,26 +20,6 @@
 ## 项目结构
 
 ```
-.vitepress/
-  config.js        # 站点配置（唯一生效的配置入口；head 注入首屏加载遮罩独立内联脚本：进度/加载日志/失败态均不依赖主 JS 与主题 CSS，HTML 解析即显示，水合后由 LoadingOverlay 调 __LAYO_BOOTED__() 汇报，替代原 8s 静态看门狗）
-  seo.js           # SEO/GEO 工具模块：URL 派生、页面 head 注入、robots/llms 生成
-  seo-config.js    # SEO 独立配置：所有 SEO 变量集中于此，默认沿用 config.js 的值
-  theme/
-    index.js       # 主题入口（唯一生效的入口，extends DefaultTheme，注册 VPB 组件，enhanceApp 初始化 Cookie 同意）
-    Layout.vue     # 组合布局：博客文章/作者页插槽（VPB）+ 导航栏 Cookie 按钮（nav-bar-content-after）+ 全站回到顶部（layout-bottom）+ 工单页 is-tickets-page 标记（加宽内容区）+ 全站加载遮罩（LoadingOverlay）
-    style.css      # 全局样式与 ak-ui 组件替换（保留双份规则）
-    cookie-consent.js # 第三方 Cookie 同意管理器（vanilla-cookieconsent）+ Clarity 同意同步
-    CookieConsentButton.vue # 导航栏右上角手动弹出 Cookie 偏好设置的按钮（Layout.vue 的 nav-bar-content-after 插槽引入）
-    BackToTop.vue  # 全站右下角回到顶部按钮（VPBackToTop 类，基础样式见 style.css）
-    loader.js      # 首屏加载遮罩独立内联脚本生成器（config.js head 注入，随 HTML 解析执行：大百分比/贴底进度条/背景加载日志/失败态/兜底超时，进度算法与 fetch·XHR·PerformanceObserver 日志全在本文件，不依赖主 JS 与主题 CSS）
-    LoadingOverlay.vue # 路由切换顶部细进度条 + 水合汇报：首次全屏遮罩已由 loader.js 独立接管，本组件仅驱动路由异步 chunk 的顶部进度条并在挂载时调 __LAYO_BOOTED__()
-index.md           # 首页（hero + features）
-blogs/             # 博客站：index.md（VPBHome 文章列表）+ posts/（文章）+ authors/（作者）+ archives.md（VPBArchives）+ tags.md（VPBTags）
-docs/              # 文档页
-support/tickets/   # 工单追踪（列表页：index.md + Ticket.vue + tickets.data.js 遍历加载器；详情页头部：TicketHeader.vue + 按需样式入口 element-plus-styles.js，均基于 Element Plus 构建）
-assets/tickets/    # 工单数据源：每个工单一个 .md（frontmatter 含 id/title/status/priority/reporter/channel/createdAt + updates 更新记录，正文即工单详情页；更新时间自动取 updates 最新一条，不手填 updatedAt）。example.md 为参数注释模板，加载器已排除，不计入工单列表
-.env               # 站点配置唯一来源：VITE_SITE_*（站点基础）+ VITE_SEO_*（SEO 独立覆盖）
-package.json
 layo.vite/                       # 仓库根（git 追踪文件全集，构建产物/缓存除外）
 ├── .env                         # 站点配置唯一来源：VITE_SITE_*（站点基础）+ VITE_SEO_*（SEO 独立覆盖）
 ├── .gitignore
@@ -53,17 +33,18 @@ layo.vite/                       # 仓库根（git 追踪文件全集，构建�
 ├── .trae/rules/
 │   └── git-commit-message.md    # 提交信息规范（Conventional Commits，见约定 7）
 ├── .vitepress/                  # 站点配置与主题（唯一生效入口）
-│   ├── config.js                # 站点配置（唯一生效的配置入口）
+│   ├── config.js                # 站点配置（唯一生效的配置入口；head 注入：加载遮罩内联脚本、ak-ui CDN CSS、字体、Clarity、SEO meta）
 │   ├── seo.js                   # SEO/GEO 工具模块：URL 派生、页面 head 注入、robots/llms 生成
 │   ├── seo-config.js            # SEO 独立配置：所有 SEO 变量集中于此，默认沿用 config.js 的值
 │   └── theme/
 │       ├── index.js             # 主题入口（唯一生效入口，extends DefaultTheme，注册 VPB 组件，enhanceApp 初始化 Cookie 同意）
-│       ├── Layout.vue           # 组合布局：博客文章/作者页插槽（VPB）+ Cookie 按钮插槽（nav-bar-content-after）+ 全站回到顶部（layout-bottom）+ 工单页 is-tickets-page 标记（加宽内容区）
-│       ├── style.css            # 全局样式与 ak-ui 组件替换（保留双份规则）
+│       ├── Layout.vue           # 组合布局：博客文章/作者页插槽（VPB）+ Cookie 按钮插槽（nav-bar-content-after）+ 回到顶部（layout-bottom）+ 工单页 is-tickets-page 标记（加宽内容区）+ 404 页 is-404-page 标记 + 全站加载遮罩（LoadingOverlay）
+│       ├── VPBHome.vue          # VPBHome 本地副本（原版把博客大标题渲染为 h2 致页面缺 h1；副本改 h1，其余与原版一致，见约定 15）
+│       ├── style.css            # 全局样式与 ak-ui 组件替换（保留双份规则），各区块见约定 11
 │       ├── cookie-consent.js    # 第三方 Cookie 同意管理器（vanilla-cookieconsent）+ Clarity 同意同步
 │       ├── CookieConsentButton.vue # 导航栏右上角手动弹出 Cookie 偏好设置按钮（nav-bar-content-after 插槽引入）
 │       ├── BackToTop.vue        # 全站右下角回到顶部按钮（VPBackToTop 类，基础样式见 style.css）
-│       ├── loader.js            # 首屏加载遮罩独立内联脚本生成器（config.js head 注入）
+│       ├── loader.js            # 首屏加载遮罩独立内联脚本生成器（config.js head 注入，随 HTML 解析执行，不依赖主 JS 与主题 CSS）
 │       └── LoadingOverlay.vue   # 路由切换顶部细进度条 + 水合汇报（__LAYO_BOOTED__）
 ├── blogs/                       # 博客站
 │   ├── index.md                 # VPBHome 文章列表
@@ -101,24 +82,35 @@ layo.vite/                       # 仓库根（git 追踪文件全集，构建�
 9. 网络资源（如 ak-ui CDN CSS、Google 字体 Noto Sans/Serif SC）通过 `config.js` 的 `head` 配置注入。
 10. 每次完成任务后检查是否需要更新 `AGENTS.md`。
 11. **`theme/style.css` 区块约定**（新增样式按对应区块归类追加，不另起炉灶）：
-    - 变量映射（顶部）：ak-ui 调色板/字体变量（`--ak-*`）+ 语义角色 token（signal/surface/text/几何/动效/焦点/密度，见约定 12）→ `--vp-c-*`（明/暗双主题）、`--vp-button-*`、`--vp-home-hero-*`、`--vp-custom-block-*`。新增全站风格化时优先改变量映射，避免硬编码颜色。
+    - 变量映射（顶部）：`--ak-*` 调色板/字体变量 → `--vp-c-*`（明/暗双主题）、`--vp-button-*`、`--vp-home-hero-*`、`--vp-custom-block-*`。新增全站风格化时优先改变量映射，避免硬编码颜色。
     - 文档风格化（导航/侧边栏/代码块/表格/引用/滚动条）："组件细节"区块。
-    - 全站背景：中性分层表面（ak-ui system），由 "html body" 区块控制；已移除网格/光晕/扫描线等装饰。
-    - ak-ui 组件品牌化覆盖（卡片/按钮/图标契约）：末尾"ak-ui 组件品牌化覆盖（system 强度）"区块，含 A. 表面分层（特性卡/博客卡矩形化，无斜切角标与辉光）、B. 背景装饰（已移除，仅保留说明）、C. 交互动效（光带已移除）、D. 焦点状态差异化、F. 导航折叠"更多"菜单。
+    - 明日方舟强化装饰（卡片斜切角/角标、背景扫描线与六边形徽标、导航警示条纹、按钮光带动效）：末尾"明日方舟风格化增强"区块。
     - 工单系统（Element Plus）方舟化："G. 工单系统（Element Plus）方舟化"区块，以 `.is-tickets-page` 前缀限定（EP 仅存在于工单页），新增 el 组件样式追加到该区块。
-    - 加载遮罩与顶部进度条："H. 页面加载遮罩与顶部进度条"区块；其中遮罩 DOM 与进度条 track/bar 的定位/尺寸/底色/渐变关键样式由 head 内联脚本（theme/loader.js）内联，保证主题 CSS 未加载时即时可见；遮罩顶部黄黑流动警示条与 `ak-hazard-scroll` 关键帧定义在该区块内。
+    - 加载遮罩与顶部进度条："H. 页面加载遮罩与顶部进度条"区块；其中遮罩 DOM 与进度条 track/bar 的定位/尺寸/底色/渐变关键样式由 head 内联脚本（theme/loader.js）内联，保证主题 CSS 未加载时即时可见。
     - 层叠约定：Cookie 同意窗口（`#cc-main` 的 `--cc-z-index`）固定为 9999880，置于加载遮罩（z-index: 9999990）之下，防止首次加载时挡住遮罩内日志终端。
-    - 导航栏 44px 方形图标按钮（`--ak-density-control-height`，满足触控目标；Cookie 偏好/社交链接）统一描边："导航图标按钮规范"区块，新增同类按钮把类名加入其公共选择器即可继承。
-12. **ak 令牌（token）约束**：
-    - **调色板**：`--ak-*` 颜色值一律取自 ak-ui 官方调色板（blue/dark-blue/light-blue/yellow/gray/dark/white/black/low/basic/primary/secondary/advanced）与项目既有 `--ak-accent`（#f6540e），严禁自造新色。
-    - **语义角色**（style.css 顶部"ak-ui 语义角色"区块）：`--ak-signal-info/action/accent/danger/success/disabled`、`--ak-surface-*`、`--ak-text-*`、派生柔化（`--ak-info-faint/tint/soft`、`--ak-action-soft`、`--ak-accent-soft`）以及几何/动效/焦点/密度 token（`--ak-cut-*`、`--ak-radius-subtle`、`--ak-motion-*`、`--ak-ease-*`、`--ak-focus-*`、`--ak-density-*`、`--ak-font-command`）均为项目按 ak-ui 设计语言（ak-ui skill 契约）约定的语义命名空间。消费侧一律引用语义角色，不得散落 rgba/hex 三元组。
-    - **danger/红** 系统一复用 `--ak-signal-danger`（= `--ak-accent` #f6540e，项目约定：保证 404 红主题/工单/加载失败等特色视觉不变）与 `--vp-c-shadow-danger`（明暗映射）；成功绿用 `--ak-signal-success`（Element Plus 语义色）。
+    - 导航栏 40px 方形图标按钮（Cookie 偏好/社交链接）统一描边："导航图标按钮规范"区块，新增同类按钮把类名加入其公共选择器即可继承。
+12. **ak-color 约束：不创建 ak-ui 未定义的 `--ak-*` 颜色变量**。ak-ui 官方调色板仅有 blue/dark-blue/light-blue/yellow/gray/dark/low/basic/primary/secondary/advanced；全站 danger/红色系统一复用既有 `--ak-accent`（#f6540e）与 `--vp-c-shadow-danger`（明暗映射）。新色一律改从上述变量派生，严禁自造。
 13. **404 页面主题约定**：
     - 根标识：`theme/Layout.vue` 依据 `page.isNotFound` 给根 Layout 注入 `is-404-page` 类；所有 404 专属样式以 `.is-404-page` / `.NotFound` 为前缀限定，避免污染全站。
     - 位置：404 红色主题（内容元素 + 顶栏红 + 顶栏底部唯一主警戒线）集中在 `style.css` 末尾"404 页面危险警戒主题"区块。
     - 动态斜纹警戒线：`repeating-linear-gradient(-45deg)` 必须配 `background-size: <水平周期> 100%`（22.63px），否则背景平铺会在元素左右端产生竖向接缝；且 `background` 简写会重置 `background-size`，覆盖时必须显式重设。
-14. **SEO/GEO 无硬链接**：站点与 SEO 变量全部来自 `.env`——`VITE_SITE_*`（URL/站名/描述/语言/主题色）在 `config.js` 读取，`VITE_SEO_*`（SEO 站名/描述/备选名/作者/OG/Twitter/robots）在 `seo-config.js` 读取，未设置时回退到站点基础变量或代码默认值，代码内不硬编码域名与站名；描述类变量允许换行（双引号 + `\n`，或双引号内真实换行），代码侧统一经 `expandNewlines` 归为真实换行；`sitemap.xml`、`robots.txt`、`llms.txt` 由 VitePress 内置 `sitemap` 配置与 `config.js` 的 `buildEnd` 钩子在构建时自动生成，页面级 canonical/OG/JSON-LD 由 `transformHead` 钩子注入（实现集中在 `.vitepress/seo.js`）。新增 SEO 逻辑一律在 `seo.js` 中实现，不要在页面里写死绝对地址。需要跳过 SEO 的页面在 `seo.js` 的 `SEO_EXCLUDE_PAGES` 中配置：`pages`（精确页）、`dirs`（目录前缀，整目录排除）、`patterns`（正则）。**工单全部页面已在 `dirs` 整目录排除**（详情页数据源 `assets/tickets/` 与列表页 `support/tickets/`）：命中排除的页面不进入 `sitemap.xml` / `llms.txt`、不注入 canonical/OG/JSON-LD，页面输出 `noindex, nofollow`，并自动在 `robots.txt` 生成对应 `Disallow` 行（由 `dirs` 派生）。站内搜索（`search.provider: 'local'`）同样通过 `config.js` 的 `_render` 钩子调用 `isPageExcluded` 跳过这些页面，SEO 排除与站内搜索共用同一套规则。新增需要禁止索引/搜索/追踪的目录（如内部数据页）时，把目录加进 `SEO_EXCLUDE_PAGES.dirs` 即可同时生效以上全部能力（sitemap/llms 排除、noindex、robots Disallow、站内搜索排除）。
-15. **VPB 博客主题约定**：博客配置集中在 `config.js` 的 `themeConfig.blog`——`postsPath`/`authorsPath` 为相对 srcDir 的路径（如 `blogs/posts`），`path`/`tagsPath` 为路由路径（如 `/blogs`）；`transformPageData` 必须调用 `processData` 为文章/作者页打标；`vite` 需接 `@tailwindcss/vite` 插件，并对 `@chunge16/vitepress-blogs-theme` 配置 `optimizeDeps.exclude` 与 `ssr.noExternal`。`<VPBHome />`、`<VPBArchives />`、`<VPBTags />` 在 `theme/index.js` 的 `enhanceApp` 注册，博客插槽由 `theme/Layout.vue` 组合。VPB 自带 Tailwind preflight、品牌色、背景与字体，且其样式表加载顺序靠后——覆盖 vpb 样式必须在 `style.css` 中用 `!important` 或 `html` 前缀提高特异性：`--vpb-*` 变量映射集中在 `style.css` 顶部（带 `!important`），body 网格背景与标题字体覆盖集中在 "html body" 及其后 VPB 统一区块。新增博客文章放 `blogs/posts/`，作者页放 `blogs/authors/`。
-16. **Element Plus 仅限工单系统且按需加载**：工单相关页面放 `support/tickets/`（列表 `Ticket.vue`、详情页头部 `TicketHeader.vue`、按需样式入口 `element-plus-styles.js`）。Element Plus 只在这些组件内按需 import 组件；**样式不得全量引入 `element-plus/dist/index.css`**（约 580KB，VitePress 会把所有 CSS 合并进唯一全局 style.css 拖慢全站首屏），统一改由 `element-plus-styles.js` 按组件引入 `theme-chalk` 的 `el-*.css`（含依赖，直接引入 .css 而非 es 组件 style 的 css.mjs——后者内部的 .css 导入在 VitePress SSR 页面渲染阶段会因 node_modules 外部化抛 "Unknown file extension .css"）。`.el-*` 类名命名空间隔离，不影响现有 VitePress/ak-ui 样式；深色模式自动跟随 VitePress 的 `html.dark`。必须在组件 setup 内 `provide(ID_INJECTION_KEY, { prefix, current })` 与 `provide(ZINDEX_INJECTION_KEY, { current })` 以消除 SSR 水合警告。**`TicketHeader` 由 `theme/Layout.vue` 以 `defineAsyncComponent` 按路由异步加载**（`v-if="isTicketsDetail"` 守卫仅 `/assets/tickets/` 路由挂载），使完整 Element Plus JS 拆为独立 chunk、仅工单详情页访问时下载，避免进主 bundle；新增 EP 组件时须同步把其 `el-*.css` 加入 `element-plus-styles.js`。时间线数据来自工单 md 的 frontmatter `updates`，更新时间（元信息中的"更新时间"）自动取 `updates` 中最新一条，不再读 frontmatter `updatedAt`；`channel`（渠道）为自定义字段，列表标签配色见 `Ticket.vue` 的 `channelTag`（未匹配值回退默认色），模板文件 `assets/tickets/example.md` 由 `tickets.data.js` 排除。**不要**在 `theme/index.js` 全局注册 Element Plus，避免全站包体与样式污染。
+14. **SEO/GEO 无硬链接**：
+    - 变量来源：站点与 SEO 变量全部来自 `.env`——`VITE_SITE_*`（URL/站名/描述/语言/主题色）在 `config.js` 读取，`VITE_SEO_*`（SEO 站名/描述/备选名/作者/OG/Twitter/robots）在 `seo-config.js` 读取，未设置时回退到站点基础变量或代码默认值，代码内不硬编码域名与站名；描述类变量允许换行（双引号 + `\n`，或双引号内真实换行），代码侧统一经 `expandNewlines` 归为真实换行。
+    - 产物生成：`sitemap.xml`、`robots.txt`、`llms.txt` 由 VitePress 内置 `sitemap` 配置与 `config.js` 的 `buildEnd` 钩子在构建时自动生成；页面级 canonical/OG/JSON-LD 由 `transformHead` 钩子注入（实现集中在 `.vitepress/seo.js`）。新增 SEO 逻辑一律在 `seo.js` 中实现，不要在页面里写死绝对地址。
+    - 排除规则：`seo.js` 的 `SEO_EXCLUDE_PAGES` 支持 `pages`（精确页）、`dirs`（目录前缀，整目录排除）、`patterns`（正则）。**工单全部页面已在 `dirs` 整目录排除**（详情页数据源 `assets/tickets/` 与列表页 `support/tickets/`）：不进入 `sitemap.xml`/`llms.txt`、不注入 canonical/OG/JSON-LD、输出 `noindex, nofollow`、自动在 `robots.txt` 生成 `Disallow` 行；站内搜索（`search.provider: 'local'`）通过 `_render` 钩子调用 `isPageExcluded` 共用同一套规则。新增需要禁止索引/搜索/追踪的目录（如内部数据页），加进 `dirs` 即可同时生效以上全部能力。
+15. **VPB 博客主题约定**：
+    - 配置：博客配置集中在 `config.js` 的 `themeConfig.blog`——`postsPath`/`authorsPath` 为相对 srcDir 的路径（如 `blogs/posts`），`path`/`tagsPath` 为路由路径（如 `/blogs`）；`transformPageData` 必须调用 `processData` 为文章/作者页打标；`vite` 需接 `@tailwindcss/vite` 插件，并对 `@chunge16/vitepress-blogs-theme` 配置 `optimizeDeps.exclude` 与 `ssr.noExternal`。
+    - 组件：`<VPBHome />`、`<VPBArchives />`、`<VPBTags />` 在 `theme/index.js` 的 `enhanceApp` 注册，博客插槽由 `theme/Layout.vue` 组合。
+    - 样式覆盖：VPB 自带 Tailwind preflight、品牌色、背景与字体，且样式表加载顺序靠后——覆盖必须在 `style.css` 中用 `!important` 或 `html` 前缀提高特异性；`--vpb-*` 变量映射集中在 `style.css` 顶部（带 `!important`），body 网格背景与标题字体覆盖集中在 "html body" 及其后 VPB 统一区块。
+    - 内容：新增博客文章放 `blogs/posts/`，作者页放 `blogs/authors/`。
+    - VPBHome 本地覆盖：`theme/VPBHome.vue`（在 `theme/index.js` 替换原包注册），原版把博客大标题渲染为 `<h2>` 致 `/blogs/` 页面缺 `<h1>`，副本改为 `<h1>`、样式类不变；升级 vpb 时注意保持该副本同步（VPBArchives/VPBTags 同有此 h2 问题，暂未覆盖）。
+16. **Element Plus 仅限工单系统且按需加载**：
+    - 位置：工单相关页面放 `support/tickets/`（列表 `Ticket.vue`、详情页头部 `TicketHeader.vue`、按需样式入口 `element-plus-styles.js`）。
+    - 样式：**不得全量引入 `element-plus/dist/index.css`**（约 580KB，会被 VitePress 合并进唯一全局 style.css 拖慢全站首屏）；统一由 `element-plus-styles.js` 按组件引入 `theme-chalk` 的 `el-*.css`（直接引入 .css 而非 es 组件 style 的 css.mjs——后者内部的 .css 导入在 VitePress SSR 渲染阶段会因 node_modules 外部化抛 "Unknown file extension .css"）。新增 EP 组件时须同步把其 `el-*.css` 加入该文件。
+    - 作用域与主题：`.el-*` 类名命名空间隔离，不影响现有 VitePress/ak-ui 样式；深色模式自动跟随 VitePress 的 `html.dark`。
+    - SSR 水合：组件 setup 内 `provide(ID_INJECTION_KEY, { prefix, current })` 与 `provide(ZINDEX_INJECTION_KEY, { current })` 以消除水合警告。
+    - 异步加载：`TicketHeader` 由 `theme/Layout.vue` 以 `defineAsyncComponent` 按路由异步加载（`v-if="isTicketsDetail"` 守卫仅 `/assets/tickets/` 路由挂载），完整 Element Plus JS 拆为独立 chunk、仅工单详情页访问时下载，不进主 bundle。
+    - 数据：时间线数据来自工单 md 的 frontmatter `updates`，更新时间（元信息中的"更新时间"）自动取 `updates` 中最新一条，不再读 frontmatter `updatedAt`；`channel`（渠道）为自定义字段，列表标签配色见 `Ticket.vue` 的 `channelTag`（未匹配值回退默认色）；模板文件 `assets/tickets/example.md` 由 `tickets.data.js` 排除。
+    - **不要**在 `theme/index.js` 全局注册 Element Plus，避免全站包体与样式污染。
 17. **验证方式：非必要不调用浏览器验证**：代码改动默认通过静态分析（`GetDiagnostics`/`Grep`）与 `npm run build` 确认；浏览器验证（`browser_use` 等）成本高，仅限确实需要确认渲染结果/视觉效果的改动（如布局、动画、样式视觉验收）且无法从代码静态判定的情况下才使用，避免每次改动都跑浏览器验证。
 18. **开源许可登记**：`docs/tpn.md` 是全站开源许可证的唯一登记处（首页"开放源代码许可"feature 已链接）。每次对话结束（任务收尾）时，检查本次是否新增或改动了开源依赖/资源——包括 npm 包、CDN 样式与脚本、字体、图标库、借鉴或直接使用的开源代码片段等；如有，必须同步在 `docs/tpn.md` 登记其名称、许可证与用途，保持许可信息最新、避免遗漏。
