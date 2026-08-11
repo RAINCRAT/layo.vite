@@ -133,7 +133,7 @@ function onBack() {
 
 /* 终端式小标题（CSS 伪元素，无需改模板） */
 .ticket-header__timeline::before {
-  content: "// 事项碎片";
+  content: "// 事相碎片";
   display: block;
   margin-bottom: 14px;
   font-family: var(--ak-font-serif);

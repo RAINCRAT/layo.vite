@@ -280,8 +280,17 @@ export const loaderHeadScript = `(function () {
     try { return new URL(href, window.location.href).origin === window.location.origin; }
     catch (e) { return false; }
   }
+  function isResourceLoaded(url) {
+    try {
+      // l.href 为绝对地址，资源性能条目名与其一致；命中说明该资源已下载（含缓存命中）
+      return performance.getEntriesByName(url, 'resource').length > 0;
+    } catch (e) { return false; }
+  }
   function trackStyles() {
-    var links = document.querySelectorAll('link[rel="stylesheet"]');
+    // 跟踪两种样式形态：常规 <link rel="stylesheet">，以及 config.js transformHtml
+    // 变换后的 <link rel="preload" as="style" onload="...">（非阻塞预取）。
+    // 两者都必须在遮罩淡出前完成下载/应用，避免 FOUC。
+    var links = document.querySelectorAll('link[rel="stylesheet"], link[rel="preload"][as="style"]');
     if (!links.length) return complete('styles');
     var total = links.length, unit = W.styles / total, remaining = total, settled = false;
     function finishOne(fatal) {
@@ -298,6 +307,9 @@ export const loaderHeadScript = `(function () {
     }, 2500);
     for (var i = 0; i < links.length; i++) (function (l) {
       if (l.sheet) return finishOne(false);
+      // preload 形态：若资源在本脚本执行前已下载完成（如缓存命中），load 事件已派发，
+      // 需经资源性能条目判定，避免永远等不到 load 只能靠 2.5s 超时兜底
+      if (isResourceLoaded(l.href)) return finishOne(false);
       l.addEventListener('load', function () { finishOne(false); }, { once: true });
       l.addEventListener('error', function () { finishOne(isSameOrigin(l.href)); }, { once: true });
     })(links[i]);

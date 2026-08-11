@@ -69,6 +69,22 @@ export default defineConfig({
     }
     : {}),
 
+  // 首屏性能：VitePress 会把全部 CSS 合并进唯一全局 style.css（数百 KB），并以
+  // render-blocking 的 `<link rel="preload stylesheet" as="style">` 注入 head——
+  // 浏览器在 CSS 下载完成前阻塞一切绘制，head 内联加载遮罩（loader.js，关键样式内联）
+  // 也显示不出来，造成"白屏等几秒才开始走进度条"。此处把该链接改为非阻塞预取：
+  // preload 尽早并行下载 CSS，首帧立即绘制遮罩/进度条，CSS 就绪后经 onload 转 stylesheet
+  // 应用（noscript 兜底）。loader.js 的 trackStyles 同步跟踪 `link[rel="preload"][as="style"]`，
+  // 保证遮罩在 CSS 应用前不淡出（无 FOUC）。
+  transformHtml(html) {
+    return html.replace(
+      /<link\b([^>]*?)\brel="preload stylesheet"([^>]*?)\/?>/g,
+      (match, pre, post) =>
+        `<link${pre}rel="preload"${post} onload="this.onload=null;this.rel='stylesheet'">` +
+        `<noscript><link${pre}rel="stylesheet"${post}></noscript>`
+    );
+  },
+
   // 每页动态注入 canonical / OG / Twitter / JSON-LD（URL 均由 siteUrl 派生）
   transformHead(ctx) {
     const { pageData, siteData } = ctx;

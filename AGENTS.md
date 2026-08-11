@@ -33,7 +33,7 @@ layo.vite/                       # 仓库根（git 追踪文件全集，构建�
 ├── .trae/rules/
 │   └── git-commit-message.md    # 提交信息规范（Conventional Commits，见约定 7）
 ├── .vitepress/                  # 站点配置与主题（唯一生效入口）
-│   ├── config.js                # 站点配置（唯一生效的配置入口；head 注入：加载遮罩内联脚本、字体、Clarity、SEO meta）
+│   ├── config.js                # 站点配置（唯一生效的配置入口；head 注入：加载遮罩内联脚本、字体、Clarity、SEO meta；transformHtml：全局 CSS 改非阻塞预取，见约定 11）
 │   ├── seo.js                   # SEO/GEO 工具模块：URL 派生、页面 head 注入、robots/llms 生成
 │   ├── seo-config.js            # SEO 独立配置：所有 SEO 变量集中于此，默认沿用 config.js 的值
 │   └── theme/
@@ -86,7 +86,7 @@ layo.vite/                       # 仓库根（git 追踪文件全集，构建�
     - 文档风格化（导航/侧边栏/代码块/表格/引用/滚动条）："组件细节"区块；分隔线 `vp-doc hr` 对齐 `.ak-divider` 模块（两段式粗杠）。
     - ak-ui 组件品牌化覆盖："A. 表面分层与按钮/卡片契约"区块（对齐官方 `.ak-button`/`.ak-card` 编译产物：方块几何、50px 高、hover 提亮+浮起、active 压暗遮罩；`.VPButton`/`.VPFeature`/`.vpb-card` 覆盖），其后跟随 B（背景装饰，已移除项说明）/C（交互动效）/D（焦点）/F（导航更多菜单）/E（404 红主题）/G（工单 EP 方舟化）/H（加载遮罩）等区块。真实 `.ak-*` 类的品牌字面量覆盖（如 `.ak-button--action` 官方 #2bf → 品牌主蓝）也集中在本区块。A 区块内还有"VPB 博客组件残留默认样式 ak 化"子区块：vpb 主题样式表加载顺序靠后，其默认圆角（`rounded-*` 工具类）、代码块/行内代码圆角、`:root` 的 `--vp-c-brand` 绿色系变量与 Neue Haas/Iowan 字体都会压过顶部品牌映射——用 `html` 前缀 + `!important`（及 `html:root` 变量重声明）统一拉回 ak 直角几何与品牌蓝（`.vpb-page`/`.vpb-soft-panel`/`.vpb-results-panel`/`.vpb-card--static`/`.vpb-pill`/`.vpb-chip`/头像圆角归零、元信息等宽、文章标题命令字面 900 等）。同区块还含**布局微调**约定：标题行高中文舒适区间（`.vpb-display-title`/`.vpb-page-title` 1.14、`.vp-doc h1` 1.18、`.vpb-card h2` 1.32，均覆盖 vpb 默认 0.98-1.06）；文章卡片大标题宽度放宽（`.vpb-card h2` 的 `max-width` 18ch → 28ch，vpb 默认限制太窄致中文标题频繁断行；`margin-bottom` 1rem → 1.15rem 缓解多行标题与摘录拥挤）；首页特性卡整体优化（`.VPFeature .box` padding 28px、`.VPFeature .title` 命令字面 900/行高 1.4/字距归零、`.VPFeature .details` 行高 1.7）；竖屏（`@media (max-width: 1279.98px)`）文章页作者块弱化（作者块不在 `.vp-doc` 内，位于 `.content-container`/`.VPDocAside` 下，选择器须用 `html dl.pb-10` 兜底：padding/头像/字号收窄）；卡片高光与面板阴影收敛（`--vpb-panel-shadow`/`--vpb-panel-shadow-hover` 收敛为 0 8px 24px / 0 16px 36px）；`.vpb-results-panel` 背景品牌化为 `--vpb-bg-soft`。
     - 工单系统（Element Plus）方舟化："G. 工单系统（Element Plus）方舟化"区块，以 `.is-tickets-page` 前缀限定（EP 仅存在于工单页），新增 el 组件样式追加到该区块；el-tag 几何对齐官方 `.ak-tag`（左上信号条 `::before` + 右上 45° 斜切角 `clip-path`）。
-    - 加载遮罩与顶部进度条："H. 页面加载遮罩与顶部进度条"区块；其中遮罩 DOM 与进度条 track/bar 的定位/尺寸/底色/渐变关键样式由 head 内联脚本（theme/loader.js）内联，保证主题 CSS 未加载时即时可见。
+    - 加载遮罩与顶部进度条："H. 页面加载遮罩与顶部进度条"区块；其中遮罩 DOM 与进度条 track/bar 的定位/尺寸/底色/渐变关键样式由 head 内联脚本（theme/loader.js）内联，保证主题 CSS 未加载时即时可见。**全局 CSS 非阻塞加载**：VitePress 会把全部 CSS 合并进唯一全局 style.css（数百 KB），默认以 render-blocking 的 `<link rel="preload stylesheet">` 注入 head，阻塞一切首帧绘制（含遮罩），造成"白屏等几秒才开始走进度条"；`config.js` 的 `transformHtml` 钩子把该链接改为 `<link rel="preload" as="style" onload="this.rel='stylesheet'">`（`<noscript>` 兜底），首帧立即绘制遮罩，CSS 就绪后应用；`loader.js` 的 `trackStyles` 同步跟踪 `link[rel="preload"][as="style"]`（含缓存命中判定），遮罩在 CSS 应用前不淡出（无 FOUC）。
     - 层叠约定：Cookie 同意窗口（`#cc-main` 的 `--cc-z-index`）固定为 9999880，置于加载遮罩（z-index: 9999990）之下，防止首次加载时挡住遮罩内日志终端。
     - 导航栏 40px 方形图标按钮（Cookie 偏好/社交链接）统一描边："导航图标按钮规范"区块，新增同类按钮把类名加入其公共选择器即可继承。
 12. **ak-color 约束：不创建 ak-ui 未定义的 `--ak-*` 颜色变量**。ak-ui 官方调色板（0.2.1 `--ak-color-*` 命名空间）仅有 white/black/low/basic/primary/secondary/advanced/accent/blue/yellow/dark-blue/light-blue/gray/dark；全站 danger/红色系统一复用既有 `--ak-accent`（#f6540e）与 `--vp-c-shadow-danger`（明暗映射）。新色一律改从上述变量派生，严禁自造；组件内字面量（如 `.ak-button--action` 编译产物 #2bf）在"ak-ui 组件品牌化覆盖"区块用覆盖规则对齐品牌，不动 npm 包源码。
@@ -106,7 +106,7 @@ layo.vite/                       # 仓库根（git 追踪文件全集，构建�
     - VPBHome 本地覆盖：`theme/VPBHome.vue`（在 `theme/index.js` 替换原包注册），原版把博客大标题渲染为 `<h2>` 致 `/blogs/` 页面缺 `<h1>`，副本改为 `<h1>`、样式类不变；升级 vpb 时注意保持该副本同步（VPBArchives/VPBTags 同有此 h2 问题，暂未覆盖）。
 16. **Element Plus 仅限工单系统且按需加载**：
     - 位置：工单相关页面放 `support/tickets/`（列表 `Ticket.vue`、详情页头部 `TicketHeader.vue`、按需样式入口 `element-plus-styles.js`）。
-    - 样式：**不得全量引入 `element-plus/dist/index.css`**（约 580KB，会被 VitePress 合并进唯一全局 style.css 拖慢全站首屏）；统一由 `element-plus-styles.js` 按组件引入 `theme-chalk` 的 `el-*.css`（直接引入 .css 而非 es 组件 style 的 css.mjs——后者内部的 .css 导入在 VitePress SSR 渲染阶段会因 node_modules 外部化抛 "Unknown file extension .css"）。新增 EP 组件时须同步把其 `el-*.css` 加入该文件。
+    - 样式：**不得全量引入 `element-plus/dist/index.css`**（约 580KB，会被 VitePress 合并进唯一全局 style.css 拖慢全站首屏）；统一由 `element-plus-styles.js` 按组件引入 `theme-chalk` 的 `el-*.css`（直接引入 .css 而非 es 组件 style 的 css.mjs——后者内部的 .css 导入在 VitePress SSR 渲染阶段会因 node_modules 外部化抛 "Unknown file extension .css"）。新增 EP 组件时须同步把其 `el-*.css` 加入该文件。**注意**：VitePress 强制 `build.cssCodeSplit: false` 且构建时只引用第一个 CSS asset——全部 CSS（含动态 import 的样式）最终仍合并进唯一全局 style.css，**不要**试图用动态 import 拆走 EP 样式（无法生效且可能破坏样式引用）；EP 样式的体积影响已由"全局 CSS 非阻塞加载"（约定 11）消除 render-blocking。
     - 作用域与主题：`.el-*` 类名命名空间隔离，不影响现有 VitePress/ak-ui 样式；深色模式自动跟随 VitePress 的 `html.dark`。
     - SSR 水合：组件 setup 内 `provide(ID_INJECTION_KEY, { prefix, current })` 与 `provide(ZINDEX_INJECTION_KEY, { current })` 以消除水合警告。
     - 异步加载：`TicketHeader` 由 `theme/Layout.vue` 以 `defineAsyncComponent` 按路由异步加载（`v-if="isTicketsDetail"` 守卫仅 `/assets/tickets/` 路由挂载），完整 Element Plus JS 拆为独立 chunk、仅工单详情页访问时下载，不进主 bundle。
