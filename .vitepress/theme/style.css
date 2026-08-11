@@ -386,11 +386,6 @@ html .vpb-page-title {
   transform-origin: left top;
 }
 
-/* 特性卡片悬停发光（与卡片顶部 4px 蓝条边缘同色） */
-.VPFeature:hover {
-  box-shadow: 0 0 24px var(--vp-c-shadow-brand-strong) !important;
-}
-
 /* 导航菜单链接：ak 蓝 + 底部斜切指示条 */
 .VPNavBarMenuLink {
   position: relative;
@@ -750,7 +745,7 @@ html .vpb-page-title {
   top: -2px;
   width: 10rem;
   height: 5px;
-  background-color: #f6540e;
+  background-color: var(--ak-accent);
 }
 
 /* 对应 .ak-button--start */
@@ -758,8 +753,8 @@ html .vpb-page-title {
   width: 38px;
   height: 38px;
   background-color: transparent;
-  border: 5px solid #ffd802;
-  color: #ffd802;
+  border: 5px solid var(--ak-yellow);
+  color: var(--ak-yellow);
   font-style: italic;
   font-size: xx-small;
   font-weight: 700;
@@ -773,7 +768,7 @@ html .vpb-page-title {
 
 /* 对应 .ak-button--start .icon */
 .button--start .icon {
-  color: #ffd802;
+  color: var(--ak-yellow);
   transform: rotate(45deg) translate(22px, -10px);
 }
 
@@ -790,7 +785,7 @@ html .vpb-page-title {
   width: 38px;
   height: 38px;
   background-color: transparent;
-  border: 5px solid var(--ak-loading-color, #ffd802);
+  border: 5px solid var(--ak-loading-color, var(--ak-yellow));
   position: absolute;
   left: 50%;
   top: 50%;
@@ -829,13 +824,14 @@ html .vpb-page-title {
   padding: 0.5rem 1rem;
 }
 
-/* VitePress 特性卡片：顶部 4px 蓝条边缘，阴影取同色 */
+/* VitePress 特性卡片：顶部 4px 蓝条边缘。
+ * 该卡片带六边形斜切 clip-path（见『明日方舟风格化增强』区），会裁掉 box-shadow，
+ * 故此处不再声明阴影，静止为平面卡片、hover 辉光走 drop-shadow。 */
 .VPFeature {
   background-color: transparent !important;
   border: none !important;
   border-radius: 0 !important;
   transition: 0.2s;
-  box-shadow: 0 2px 6px var(--vp-c-shadow-brand) !important;
   outline: 0;
   display: inline-block;
   padding: 0.5rem 1rem;
@@ -1031,7 +1027,7 @@ html .vpb-page-title {
 
 /* 对应 .ak-button-group--action */
 .button-group--action {
-  background-color: var(--button-group-bgcolor, rgba(5, 166, 220, 0.9));
+  background-color: var(--button-group-bgcolor, rgba(74, 171, 234, 0.9));
   padding: 0.2rem;
 }
 
@@ -1096,7 +1092,7 @@ html .vpb-page-title {
 .button-group--total .left .button {
   width: 100%;
   height: 100%;
-  background-color: var(--button-group-bgcolor, rgba(5, 166, 220, 0.9));
+  background-color: var(--button-group-bgcolor, rgba(74, 171, 234, 0.9));
   box-shadow: none;
 }
 
@@ -1579,9 +1575,11 @@ html .vpb-page-title {
 }
 
 /* 规范：导航栏 40px 方形图标按钮（带描边样式）。
- * GitHub 等 VitePress 内置按钮（2.x 类名为 .VPSocialLink）用 .VPNavBar .content-body 前缀压过其 scoped 样式。 */
+ * GitHub 等 VitePress 内置按钮（2.x 类名为 .VPSocialLink）用 .VPNavBar .content-body 前缀压过其 scoped 样式。
+ * 回到顶部按钮（.VPBackToTop）同属该规范，仅特殊化右下角悬浮定位与底色（见本区块末尾）。 */
 .vp-cookie-btn,
-.VPNavBar .content-body .VPSocialLink {
+.VPNavBar .content-body .VPSocialLink,
+.VPBackToTop {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1596,7 +1594,8 @@ html .vpb-page-title {
 }
 
 .vp-cookie-btn:hover,
-.VPNavBar .content-body .VPSocialLink:hover {
+.VPNavBar .content-body .VPSocialLink:hover,
+.VPBackToTop:hover {
   border-color: var(--ak-primary);
   color: var(--vp-c-brand-1);
   box-shadow: 0 0 12px var(--vp-c-shadow-brand);
@@ -1609,10 +1608,20 @@ html .vpb-page-title {
 
 /* 图标尺寸统一 18px（cookie 与社交图标一致；社交图标为 iconify mask span，非 svg） */
 .vp-cookie-btn__icon,
+.VPBackToTop__icon,
 .VPNavBar .content-body .VPSocialLink svg,
 .VPNavBar .content-body .VPSocialLink > [class^="vpi-social-"] {
   width: 18px;
   height: 18px;
+}
+
+/* 回到顶部按钮：继承上方公共规范，仅特殊化右下角悬浮定位与底色（悬浮于正文之上需底色防内容透出） */
+.VPBackToTop {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 100;
+  background-color: var(--vp-c-bg);
 }
 
 /**
@@ -1672,7 +1681,7 @@ html .vpb-page-title {
 }
 
 .vpb-card:hover {
-  filter: drop-shadow(0 0 20px var(--vp-c-shadow-brand-strong));
+  filter: drop-shadow(0 0 22px var(--vp-c-shadow-brand-strong));
 }
 
 /* ============================ B. 背景装饰 ============================ */
@@ -1826,37 +1835,6 @@ body::after {
 /* 侧边栏分组标题 hover：primary 变色 */
 .VPSidebarItem.level-0>.item:hover .text {
   color: var(--ak-primary);
-}
-
-/* 回到顶部按钮：右下角 40px 方形图标钮，沿用导航图标按钮规范（描边 + hover 辉光） */
-.VPBackToTop {
-  position: fixed;
-  right: 24px;
-  bottom: 24px;
-  z-index: 100;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border: 1px solid var(--vp-c-border);
-  border-radius: 8px;
-  background-color: var(--vp-c-bg);
-  color: var(--vp-c-text-2);
-  cursor: pointer;
-  transition: border-color 0.2s, color 0.2s, box-shadow 0.2s;
-}
-
-/* 导航返回顶部按钮 hover：primary 辉光 */
-.VPBackToTop:hover {
-  border-color: var(--ak-primary) !important;
-  color: var(--vp-c-brand-1) !important;
-  box-shadow: 0 0 12px var(--vp-c-shadow-brand) !important;
-}
-
-.VPBackToTop__icon {
-  width: 18px;
-  height: 18px;
 }
 
 /* 工单页面（.is-tickets-page）：加宽内容区，容纳较宽的工单表格
