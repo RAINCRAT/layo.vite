@@ -92,6 +92,12 @@ export function buildPageHeadTags({ seo, base, cleanUrls, pageData }) {
     ['meta', { name: 'twitter:description', content: desc }],
   ];
 
+  // 来源标注：全站统一出处（Organization / WebSite），由 seo 变量派生，代码不硬编码。
+  // 保证所有页面类型（WebSite / CollectionPage / Article）的 JSON-LD 都向搜索引擎标明来源为站点本身。
+  const sourceUrl = siteUrl ? `${siteUrl.replace(/\/+$/, '')}/` : undefined;
+  const source = { '@type': 'Organization', name: siteName, ...(sourceUrl ? { url: sourceUrl } : {}) };
+  const website = { '@type': 'WebSite', name: siteName, ...(sourceUrl ? { url: sourceUrl } : {}) };
+
   // 结构化数据：根首页 WebSite，目录页 CollectionPage，内容页 Article
   const ld = isRootHome
     ? {
@@ -102,6 +108,7 @@ export function buildPageHeadTags({ seo, base, cleanUrls, pageData }) {
       url: `${siteUrl.replace(/\/+$/, '')}/`,
       inLanguage: siteLang,
       description: siteDescription,
+      publisher: source,
     }
     : isIndexPage
       ? {
@@ -111,6 +118,8 @@ export function buildPageHeadTags({ seo, base, cleanUrls, pageData }) {
         description: desc,
         url,
         inLanguage: siteLang,
+        isPartOf: website,
+        publisher: source,
       }
       : {
         '@context': 'https://schema.org',
@@ -123,6 +132,7 @@ export function buildPageHeadTags({ seo, base, cleanUrls, pageData }) {
         ...(lastUpdated ? { dateModified: new Date(lastUpdated).toISOString() } : {}),
         author: { '@type': 'Organization', name: author },
         publisher: { '@type': 'Organization', name: siteName },
+        sourceOrganization: source,
       };
   tags.push(['script', { type: 'application/ld+json' }, safeJsonLd(ld)]);
 
