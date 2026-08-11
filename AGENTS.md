@@ -100,8 +100,19 @@ layo.vite/                       # 仓库根（git 追踪文件全集，构建�
 8. 构建产物与缓存已被 `.gitignore` 忽略，不要提交。忽略范围覆盖多目录构建场景：根目录（`.vitepress/dist`、`.vitepress/cache`、`.vitepress/.temp`）与子目录（`./blogs/.vitepress/`、`./docs/.vitepress/` 的 `dist`/`cache`）。
 9. 网络资源（如 ak-ui CDN CSS、Google 字体 Noto Sans/Serif SC）通过 `config.js` 的 `head` 配置注入。
 10. 每次完成任务后检查是否需要更新 `AGENTS.md`。
-11. **全站主题变量映射集中在 `style.css` 顶部**：`--ak-*` 调色板/字体变量 → `--vp-c-*`（明/暗双主题）、`--vp-button-*`、`--vp-home-hero-*`、`--vp-custom-block-*`。新增全站风格化时优先改变量映射，避免硬编码颜色；文档风格化（导航/侧边栏/代码块/表格/引用/滚动条）位于 style.css 的"组件细节"区块；明日方舟强化装饰（卡片斜切角/角标、背景扫描线与六边形徽标、导航警示条纹、按钮光带动效）集中在 style.css 末尾的"明日方舟风格化增强"区块，新增强化逻辑追加到该区块；**工单系统（Element Plus）方舟化样式集中在文件末尾的"G. 工单系统（Element Plus）方舟化"区块**——以 `.is-tickets-page` 前缀限定（Element Plus 仅存在于工单页），内容为直角化/主题色映射、表格扫描线与 hover 蓝缘、尖角标签、按钮/输入/分页/描述列表、终端标题行，新增工单相关 el 组件样式追加到该区块；**加载遮罩与路由进度条（LoadingOverlay）样式集中在文件末尾的"H. 页面加载遮罩与顶部进度条"区块**（全屏遮罩装饰/顶部警示条纹/贴底进度条/背景加载日志（淡色终端小字，无面板装饰）/失败态/loader-fade 过渡/html.is-loaded 内容分步入场/prefers-reduced-motion 减弱动画），遮罩 DOM 与进度条 track/bar 的定位/尺寸/底色/渐变关键样式由 head 内联加载器脚本（theme/loader.js）内联（保证主题 CSS 未加载时即时可见），新增相关样式追加到该区块；**层叠约定：Cookie 同意窗口（`#cc-main` 的 `--cc-z-index`）固定为 9999880，置于加载遮罩（z-index:9999990）之下，防止首次加载时挡住遮罩内日志终端**；导航栏 40px 方形图标按钮（Cookie 偏好/社交链接）统一描边样式的"导航图标按钮规范"区块，新增同类按钮把类名加入其公共选择器即可继承。
-12. **ak-color 约束：不创建 ak-ui 未定义的 `--ak-*` 颜色变量**。ak-ui 官方调色板仅有 blue/dark-blue/light-blue/yellow/gray/dark/low/basic/primary/secondary/advanced；全站 danger/红色系统一复用既有 `--ak-accent`（#f6540e）与 `--vp-c-shadow-danger`（明暗映射）。新色一律改从上述变量派生，严禁自造。
+11. **`theme/style.css` 区块约定**（新增样式按对应区块归类追加，不另起炉灶）：
+    - 变量映射（顶部）：ak-ui 调色板/字体变量（`--ak-*`）+ 语义角色 token（signal/surface/text/几何/动效/焦点/密度，见约定 12）→ `--vp-c-*`（明/暗双主题）、`--vp-button-*`、`--vp-home-hero-*`、`--vp-custom-block-*`。新增全站风格化时优先改变量映射，避免硬编码颜色。
+    - 文档风格化（导航/侧边栏/代码块/表格/引用/滚动条）："组件细节"区块。
+    - 全站背景：中性分层表面（ak-ui system），由 "html body" 区块控制；已移除网格/光晕/扫描线等装饰。
+    - ak-ui 组件品牌化覆盖（卡片/按钮/图标契约）：末尾"ak-ui 组件品牌化覆盖（system 强度）"区块，含 A. 表面分层（特性卡/博客卡矩形化，无斜切角标与辉光）、B. 背景装饰（已移除，仅保留说明）、C. 交互动效（光带已移除）、D. 焦点状态差异化、F. 导航折叠"更多"菜单。
+    - 工单系统（Element Plus）方舟化："G. 工单系统（Element Plus）方舟化"区块，以 `.is-tickets-page` 前缀限定（EP 仅存在于工单页），新增 el 组件样式追加到该区块。
+    - 加载遮罩与顶部进度条："H. 页面加载遮罩与顶部进度条"区块；其中遮罩 DOM 与进度条 track/bar 的定位/尺寸/底色/渐变关键样式由 head 内联脚本（theme/loader.js）内联，保证主题 CSS 未加载时即时可见；遮罩顶部黄黑流动警示条与 `ak-hazard-scroll` 关键帧定义在该区块内。
+    - 层叠约定：Cookie 同意窗口（`#cc-main` 的 `--cc-z-index`）固定为 9999880，置于加载遮罩（z-index: 9999990）之下，防止首次加载时挡住遮罩内日志终端。
+    - 导航栏 44px 方形图标按钮（`--ak-density-control-height`，满足触控目标；Cookie 偏好/社交链接）统一描边："导航图标按钮规范"区块，新增同类按钮把类名加入其公共选择器即可继承。
+12. **ak 令牌（token）约束**：
+    - **调色板**：`--ak-*` 颜色值一律取自 ak-ui 官方调色板（blue/dark-blue/light-blue/yellow/gray/dark/white/black/low/basic/primary/secondary/advanced）与项目既有 `--ak-accent`（#f6540e），严禁自造新色。
+    - **语义角色**（style.css 顶部"ak-ui 语义角色"区块）：`--ak-signal-info/action/accent/danger/success/disabled`、`--ak-surface-*`、`--ak-text-*`、派生柔化（`--ak-info-faint/tint/soft`、`--ak-action-soft`、`--ak-accent-soft`）以及几何/动效/焦点/密度 token（`--ak-cut-*`、`--ak-radius-subtle`、`--ak-motion-*`、`--ak-ease-*`、`--ak-focus-*`、`--ak-density-*`、`--ak-font-command`）均为项目按 ak-ui 设计语言（ak-ui skill 契约）约定的语义命名空间。消费侧一律引用语义角色，不得散落 rgba/hex 三元组。
+    - **danger/红** 系统一复用 `--ak-signal-danger`（= `--ak-accent` #f6540e，项目约定：保证 404 红主题/工单/加载失败等特色视觉不变）与 `--vp-c-shadow-danger`（明暗映射）；成功绿用 `--ak-signal-success`（Element Plus 语义色）。
 13. **404 页面主题约定**：
     - 根标识：`theme/Layout.vue` 依据 `page.isNotFound` 给根 Layout 注入 `is-404-page` 类；所有 404 专属样式以 `.is-404-page` / `.NotFound` 为前缀限定，避免污染全站。
     - 位置：404 红色主题（内容元素 + 顶栏红 + 顶栏底部唯一主警戒线）集中在 `style.css` 末尾"404 页面危险警戒主题"区块。

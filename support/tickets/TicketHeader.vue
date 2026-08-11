@@ -220,7 +220,7 @@ function onBack() {
   font-size: inherit;
   line-height: inherit;
   font-weight: 600;
-  background-color: rgba(74, 171, 234, 0.22);
+  background-color: color-mix(in srgb, var(--ak-primary) 22%, transparent);
   color: var(--vp-c-brand-1);
   box-shadow: 0 0 4px var(--vp-c-shadow-brand);
 }

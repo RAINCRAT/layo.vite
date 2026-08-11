@@ -16,7 +16,7 @@ function openPreferences() {
     @click="openPreferences"
   >
     <!-- 饼干轮廓 + 巧克力豆（明日方舟线性描边风格） -->
-    <svg class="vp-cookie-btn__icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <svg class="ak-icon vp-cookie-btn__icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" />
       <circle cx="9" cy="8.5" r="1.5" fill="currentColor" />
       <circle cx="15" cy="10" r="1.5" fill="currentColor" />
