@@ -38,7 +38,7 @@ layo.vite/                       # 仓库根（git 追踪文件全集，构建�
 │   ├── seo-config.js            # SEO 独立配置：所有 SEO 变量集中于此，默认沿用 config.js 的值
 │   └── theme/
 │       ├── index.js             # 主题入口（唯一生效入口，extends DefaultTheme，注册 VPB 组件，enhanceApp 初始化 Cookie 同意）
-│       ├── Layout.vue           # 组合布局：博客文章/作者页插槽（VPB）+ Cookie 按钮插槽（nav-bar-content-after）+ 回到顶部（layout-bottom）+ 工单页 is-tickets-page 标记（加宽内容区）+ 404 页 is-404-page 标记 + 全站加载遮罩（LoadingOverlay）
+│       ├── Layout.vue           # 组合布局：博客文章/作者页插槽（VPB）+ Cookie 按钮插槽（nav-bar-content-after）+ 回到顶部（layout-bottom）+ 工单页 is-tickets-page 标记（加宽内容区）+ 404 页与 /you+/ 占位页 is-404-page 标记 + 全站加载遮罩（LoadingOverlay）
 │       ├── VPBHome.vue          # VPBHome 本地副本（原版把博客大标题渲染为 h2 致页面缺 h1；副本改 h1，其余与原版一致，见约定 15）
 │       ├── style.css            # 全局样式与 ak-ui 组件替换（保留双份规则），各区块见约定 11
 │       ├── cookie-consent.js    # 第三方 Cookie 同意管理器（vanilla-cookieconsent）+ Clarity 同意同步
@@ -67,6 +67,8 @@ layo.vite/                       # 仓库根（git 追踪文件全集，构建�
 └── assets/tickets/              # 工单数据源：每个工单一个 .md（frontmatter 含 id/title/status/priority/reporter/channel/createdAt + updates 更新记录，正文即工单详情页；更新时间自动取 updates 最新一条，不手填 updatedAt）
     ├── example.md               # 参数注释模板，加载器已排除，不计入工单列表
     └── AD-260805-01.md          # 工单数据示例
+└── you+/                        # 洛羽存储占位页（导航「洛羽存储」目标，返回 200 但复用 404 外观；见约定 14）
+    └── index.md                 # 复用 VitePress 内置 NotFound 组件（import 内部路径），SEO 排除（noindex）
 ```
 
 ## 关键约定（务必遵守）
@@ -91,13 +93,14 @@ layo.vite/                       # 仓库根（git 追踪文件全集，构建�
     - 导航栏 40px 方形图标按钮（Cookie 偏好/社交链接）统一描边："导航图标按钮规范"区块，新增同类按钮把类名加入其公共选择器即可继承。
 12. **ak-color 约束：不创建 ak-ui 未定义的 `--ak-*` 颜色变量**。ak-ui 官方调色板仅有 blue/dark-blue/light-blue/yellow/gray/dark/low/basic/primary/secondary/advanced；全站 danger/红色系统一复用既有 `--ak-accent`（#f6540e）与 `--vp-c-shadow-danger`（明暗映射）。新色一律改从上述变量派生，严禁自造。
 13. **404 页面主题约定**：
-    - 根标识：`theme/Layout.vue` 依据 `page.isNotFound` 给根 Layout 注入 `is-404-page` 类；所有 404 专属样式以 `.is-404-page` / `.NotFound` 为前缀限定，避免污染全站。
+    - 根标识：`theme/Layout.vue` 依据 `page.isNotFound` 或 `/you+/` 路由前缀（404 占位页，返回 200）给根 Layout 注入 `is-404-page` 类；所有 404 专属样式以 `.is-404-page` / `.NotFound` 为前缀限定，避免污染全站。
     - 位置：404 红色主题（内容元素 + 顶栏红 + 顶栏底部唯一主警戒线）集中在 `style.css` 末尾"404 页面危险警戒主题"区块。
     - 动态斜纹警戒线：`repeating-linear-gradient(-45deg)` 必须配 `background-size: <水平周期> 100%`（22.63px），否则背景平铺会在元素左右端产生竖向接缝；且 `background` 简写会重置 `background-size`，覆盖时必须显式重设。
 14. **SEO/GEO 无硬链接**：
     - 变量来源：站点与 SEO 变量全部来自 `.env`——`VITE_SITE_*`（URL/站名/描述/语言/主题色）在 `config.js` 读取，`VITE_SEO_*`（SEO 站名/描述/备选名/作者/OG/Twitter/robots）在 `seo-config.js` 读取，未设置时回退到站点基础变量或代码默认值，代码内不硬编码域名与站名；描述类变量允许换行（双引号 + `\n`，或双引号内真实换行），代码侧统一经 `expandNewlines` 归为真实换行。
-    - 产物生成：`sitemap.xml`、`robots.txt`、`llms.txt` 由 VitePress 内置 `sitemap` 配置与 `config.js` 的 `buildEnd` 钩子在构建时自动生成；页面级 canonical/OG/JSON-LD 由 `transformHead` 钩子注入（实现集中在 `.vitepress/seo.js`）。新增 SEO 逻辑一律在 `seo.js` 中实现，不要在页面里写死绝对地址。
-    - 排除规则：`seo.js` 的 `SEO_EXCLUDE_PAGES` 支持 `pages`（精确页）、`dirs`（目录前缀，整目录排除）、`patterns`（正则）。**工单全部页面已在 `dirs` 整目录排除**（详情页数据源 `assets/tickets/` 与列表页 `support/tickets/`）：不进入 `sitemap.xml`/`llms.txt`、不注入 canonical/OG/JSON-LD、输出 `noindex, nofollow`、自动在 `robots.txt` 生成 `Disallow` 行；站内搜索（`search.provider: 'local'`）通过 `_render` 钩子调用 `isPageExcluded` 共用同一套规则。新增需要禁止索引/搜索/追踪的目录（如内部数据页），加进 `dirs` 即可同时生效以上全部能力。
+    - 页面标题：内容页 `<title>` 统一为「页面标题 | 标题后缀」——站点级 `titleTemplate: ':title | ${seo.titleSuffix}'`（后缀来自 `VITE_SEO_TITLE_SUFFIX`，未设置回退 SEO 站名）；`seo.js` 的 `og:title`/`twitter:title`/JSON-LD `headline` 与 `<title>` 使用同一 `titleSuffix`，保证一致；首页（`index.md`）frontmatter 置 `titleTemplate: false` 保持纯站名，避免「站名 | 站名」。
+    - 产物生成：`sitemap.xml`、`robots.txt`、`llms.txt` 由 VitePress 内置 `sitemap` 配置与 `config.js` 的 `buildEnd` 钩子在构建时自动生成；页面级 canonical/OG/JSON-LD 由 `transformHead` 钩子注入（实现集中在 `.vitepress/seo.js`）。新增 SEO 逻辑一律在 `seo.js` 中实现，不要在页面里写死绝对地址。sitemap 的 `<lastmod>` 新鲜度信号来自 `themeConfig.lastUpdated: true` 触发的 git 时间戳（git 不可用时自动降级为空，不会报错）。
+    - 排除规则：`seo.js` 的 `SEO_EXCLUDE_PAGES` 支持 `pages`（精确页）、`dirs`（目录前缀，整目录排除）、`patterns`（正则）。**工单全部页面已在 `dirs` 整目录排除**（详情页数据源 `assets/tickets/` 与列表页 `support/tickets/`）：不进入 `sitemap.xml`/`llms.txt`、不注入 canonical/OG/JSON-LD、输出 `noindex, nofollow`、自动在 `robots.txt` 生成 `Disallow` 行；站内搜索（`search.provider: 'local'`）通过 `_render` 钩子调用 `isPageExcluded` 共用同一套规则。新增需要禁止索引/搜索/追踪的目录（如内部数据页），加进 `dirs` 即可同时生效以上全部能力。`patterns` 勿再添加 example 通配正则（会误伤首页 hero 链接的 `markdown-examples.md`/`api-examples.md`）；`you+/index.md`（洛羽存储占位页，返回 200 但复用 404 外观）已在 `pages` 精确排除（noindex、不进 sitemap/llms.txt），正式内容上线后需移除该排除项。
 15. **VPB 博客主题约定**：
     - 配置：博客配置集中在 `config.js` 的 `themeConfig.blog`——`postsPath`/`authorsPath` 为相对 srcDir 的路径（如 `blogs/posts`），`path`/`tagsPath` 为路由路径（如 `/blogs`）；`transformPageData` 必须调用 `processData` 为文章/作者页打标；`vite` 需接 `@tailwindcss/vite` 插件，并对 `@chunge16/vitepress-blogs-theme` 配置 `optimizeDeps.exclude` 与 `ssr.noExternal`。
     - 组件：`<VPBHome />`、`<VPBArchives />`、`<VPBTags />` 在 `theme/index.js` 的 `enhanceApp` 注册，博客插槽由 `theme/Layout.vue` 组合。

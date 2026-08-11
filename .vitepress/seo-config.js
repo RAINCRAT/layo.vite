@@ -19,6 +19,7 @@ export function createSeoConfig({ siteUrl, siteName, siteDescription, siteLang }
     VITE_SEO_OG_LOCALE,
     VITE_SEO_TWITTER_CARD,
     VITE_SEO_ROBOTS_CONTENT,
+    VITE_SEO_TITLE_SUFFIX,
   } = env;
 
   return {
@@ -45,5 +46,7 @@ export function createSeoConfig({ siteUrl, siteName, siteDescription, siteLang }
       : [siteName],
     ogLocale: VITE_SEO_OG_LOCALE || 'zh_CN',
     twitterCard: VITE_SEO_TWITTER_CARD || 'summary',
+    // 页面标题后缀（<title> / og:title 的 `| 后缀`）：与 SEO 站名独立，未设置时回退到 SEO 站名
+    titleSuffix: VITE_SEO_TITLE_SUFFIX || siteName,
   };
 }

@@ -1,6 +1,8 @@
 ---
 # https://vitepress.dev/reference/default-theme-home-page
 layout: home
+# 首页 <title> 保持纯站名（站点级 titleTemplate 会给所有页加「| 后缀」，首页为站名本身不再追加）
+titleTemplate: false
 
 hero:
   name: "RAINCRAT:LAYOSERVE"

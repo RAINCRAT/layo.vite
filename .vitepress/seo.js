@@ -17,12 +17,19 @@ import { join } from 'node:path';
  * 命中项不会进入 sitemap.xml / llms.txt，也不注入 canonical / OG / JSON-LD。
  */
 export const SEO_EXCLUDE_PAGES = {
-  pages: new Set(['AGENTS.md', 'readme.md']),
+  pages: new Set([
+    'AGENTS.md',
+    'readme.md',
+    // 洛羽存储占位页（you+/index.md，返回 200 但复用 404 外观）：正式内容上线前禁止索引，
+    // 避免搜索引擎收录一个内容为「404」的占位页（Bing 指南反对无实质内容的空壳页）
+    'you+/index.md',
+  ]),
   // 工单全部页面：详情页数据源目录 assets/tickets/ 与列表页目录 support/tickets/ 整目录排除，
   // 不进入 sitemap.xml / llms.txt，不注入 canonical / OG / JSON-LD，并在 robots.txt 生成 Disallow、页面输出 noindex
   dirs: ['assets/tickets/', 'support/tickets/'],
-  // 文件名（basename）含 example 的页面，任意层级；不匹配目录（目录条目转为 xxx/index.md，basename 为 index.md）
-  patterns: [/(^|\/)[^/]*example[^/]*\.md$/],
+  // 不再使用 example 通配正则：它会误伤首页 hero 链接的 markdown-examples.md / api-examples.md
+  //（合法内容页，须可索引）；模板文件 assets/tickets/example.md 已由上方 dirs 规则整目录覆盖。
+  patterns: [],
 };
 
 /** 判断某个页面相对路径是否命中排除规则 */
@@ -67,7 +74,7 @@ export function resolvePageUrl(siteUrl, base, relativePath, cleanUrls) {
  * 返回 VitePress HeadConfig[]（属性值由 VitePress 自动转义）。
  */
 export function buildPageHeadTags({ seo, base, cleanUrls, pageData }) {
-  const { siteUrl, siteName, siteDescription, siteLang, alternateNames, author } = seo;
+  const { siteUrl, siteName, siteDescription, siteLang, alternateNames, author, titleSuffix } = seo;
   const { relativePath, title, description, frontmatter, lastUpdated, isNotFound } = pageData;
   if (isNotFound || isPageExcluded(relativePath)) {
     // 排除页：不注入 canonical / OG / JSON-LD，并显式禁止机器人索引与跟踪
@@ -80,7 +87,8 @@ export function buildPageHeadTags({ seo, base, cleanUrls, pageData }) {
   const isIndexPage = isRootHome || /\/index\.md$/.test(relativePath);
   // home 布局页 pageData.title 为空，回退为站点名
   const pageTitle = (isRootHome && !title) ? siteName : title;
-  const ogTitle = pageTitle.includes(siteName) ? pageTitle : `${pageTitle} | ${siteName}`;
+  // og:title 后缀独立于 SEO 站名（VITE_SEO_TITLE_SUFFIX，默认回退站名），与 <title> 模板保持一致
+  const ogTitle = pageTitle.includes(siteName) ? pageTitle : `${pageTitle} | ${titleSuffix}`;
 
   const tags = [
     ['link', { rel: 'canonical', href: url }],
@@ -171,11 +179,13 @@ export function transformSitemapItems(items) {
 async function readPageTitle(srcDir, page) {
   try {
     const file = await readFile(join(srcDir, page), 'utf-8');
-    const fm = file.match(/^---\r?\n([\s\S]*?)\r?\n---/)?.[1] ?? '';
-    // 兼容单行 title 与 YAML 块标量（| / |- / |+）多行标题；块标量内部换行归为空格
+    // 统一行尾为 LF（兼容 CRLF 文件），避免正则对 \r 的处理差异
+    const fm = (file.match(/^---\r?\n([\s\S]*?)\r?\n---/)?.[1] ?? '').replace(/\r\n/g, '\n');
+    // 优先匹配 YAML 块标量（| / > 及其 - / + 变体）多行标题；
+    // 再匹配单行 title，首字符排除块标量指示符（| / >），防止 `title: |-` 被当成单行标题
     const m =
-      fm.match(/^title:\s*["']?([^"'\n]+?)["']?\s*$/m) ??
-      fm.match(/^title:\s*\|[-+]?\s*\n((?:[ \t]+.*\n?)+)/m);
+      fm.match(/^title:\s*(?:[|>][-+]?)\s*\n((?:[ \t]+.*\n?)+)/m) ??
+      fm.match(/^title:\s*["']?([^>|"'\n][^"'\n]*?)["']?\s*$/m);
     return m?.[1]?.replace(/\s*\n\s*/g, ' ').trim() ?? null;
   } catch {
     return null;

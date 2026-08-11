@@ -22,6 +22,9 @@ const seo = createSeoConfig({ siteUrl, siteName, siteDescription, siteLang }, en
 export default defineConfig({
   base: "/",
   title: siteName,
+  // 页面 <title> 模板：内容页统一为「页面标题 | 标题后缀」（后缀来自 .env 的 VITE_SEO_TITLE_SUFFIX）；
+  // 首页（index.md）frontmatter 置 titleTemplate: false 保持纯站名，避免出现「站名 | 站名」
+  titleTemplate: `:title | ${seo.titleSuffix}`,
   description: siteDescription,
   lang: siteLang,
   cleanUrls: true,
@@ -107,6 +110,9 @@ export default defineConfig({
 
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
+    // 启用 git 时间戳：sitemap.xml 的 <lastmod> 与 JSON-LD dateModified 由此填充
+    //（Bing Webmaster Guidelines 要求 sitemap 提供新鲜度信号；git 不可用时自动降级为空）
+    lastUpdated: true,
     // 深色模式开关标签（覆盖默认的 "Appearance"）
     darkModeSwitchLabel: '深色模式',
     // 404 页面文案（大数字 404 下方的标题/引语/返回链接）
