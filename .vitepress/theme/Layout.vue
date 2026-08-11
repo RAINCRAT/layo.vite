@@ -12,11 +12,12 @@ import {
 import CookieConsentButton from './CookieConsentButton.vue';
 
 const { Layout } = DefaultTheme;
-const { frontmatter } = useData();
+const { frontmatter, page } = useData();
 </script>
 
 <template>
-  <Layout>
+  <!-- 404 页面根元素加 is-404-page 标识，供 style.css 限定顶栏/内容红色主题 -->
+  <Layout :class="{ 'is-404-page': page.isNotFound }">
     <!-- 博客文章/作者页插槽（原 VPBTheme 的 VPBLayout 逻辑） -->
     <template #doc-before>
       <VPBLayoutPostTop v-if="frontmatter.blog === 'post'" />

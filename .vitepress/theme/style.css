@@ -1567,8 +1567,10 @@ html .vpb-page-title {
 }
 
 /**
- * Component: Cookie Consent 手动按钮（导航栏右上角主题开关旁）
- * 通过 flex order 稳定排序：appearance（主题开关）→ 本按钮 → social-links（GitHub）
+ * 导航图标按钮规范：Cookie 偏好 / 社交链接（GitHub）等 40px 方形图标钮
+ * 统一外观：1px 中性描边 + 透明底，hover 转 ak 蓝描边 + 辉光。
+ * 通过 flex order 稳定排序：appearance（主题开关）→ Cookie 按钮 → social-links（GitHub）。
+ * 新增同类导航图标钮时，把类名加进下方公共选择器即可继承规范。
  * -------------------------------------------------------------------------- */
 
 .VPNavBar .content-body .social-links,
@@ -1576,13 +1578,15 @@ html .vpb-page-title {
   order: 1;
 }
 
-.vp-cookie-btn {
+/* 规范：导航栏 40px 方形图标按钮（带描边样式）。
+ * GitHub 等 VitePress 内置按钮（2.x 类名为 .VPSocialLink）用 .VPNavBar .content-body 前缀压过其 scoped 样式。 */
+.vp-cookie-btn,
+.VPNavBar .content-body .VPSocialLink {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 40px;
   height: 40px;
-  margin: 0 8px;
   border: 1px solid var(--vp-c-border);
   border-radius: 8px;
   background-color: transparent;
@@ -1591,13 +1595,22 @@ html .vpb-page-title {
   transition: border-color 0.2s, color 0.2s, box-shadow 0.2s;
 }
 
-.vp-cookie-btn:hover {
+.vp-cookie-btn:hover,
+.VPNavBar .content-body .VPSocialLink:hover {
   border-color: var(--ak-primary);
   color: var(--vp-c-brand-1);
   box-shadow: 0 0 12px var(--vp-c-shadow-brand);
 }
 
-.vp-cookie-btn__icon {
+/* Cookie 按钮：与相邻按钮的间距 */
+.vp-cookie-btn {
+  margin: 0 8px;
+}
+
+/* 图标尺寸统一 18px（cookie 与社交图标一致；社交图标为 iconify mask span，非 svg） */
+.vp-cookie-btn__icon,
+.VPNavBar .content-body .VPSocialLink svg,
+.VPNavBar .content-body .VPSocialLink > [class^="vpi-social-"] {
   width: 18px;
   height: 18px;
 }
@@ -1695,6 +1708,8 @@ body::after {
 
 /* 导航栏底部黄黑警示斜纹分隔条（方舟危险区标识，向右流动）。
  * -45deg 条纹的水平重复周期 = 16px / cos(45°) ≈ 22.63px，按该位移循环即可无缝衔接。
+ * background-size 锁定为 22.63px × 100%：让背景图宽度恰好等于一个水平周期，
+ * 避免 background-repeat 平铺时在元素左右端产生竖向接缝（周期不整除元素宽度所致）。
  * z-index: -1 使其沉到导航内容最底层（仍在导航栏背景之上），下拉菜单/弹出浮窗不会被其覆盖。 */
 .VPNavBar::after {
   content: "";
@@ -1705,6 +1720,7 @@ body::after {
   z-index: -1;
   height: 3px;
   background: repeating-linear-gradient(-45deg, var(--ak-yellow) 0 8px, #000 8px 16px);
+  background-size: 22.63px 100%;
   opacity: 0.4;
   pointer-events: none;
   animation: ak-hazard-scroll 0.9s linear infinite;
@@ -1812,12 +1828,7 @@ body::after {
   color: var(--ak-primary);
 }
 
-/* 导航社交图标 hover：primary 辉光 */
-.VPNavBarSocialLink:hover {
-  color: var(--ak-primary) !important;
-}
-
-/* 文档返回顶部按钮 hover：primary 辉光 */
+/* 导航返回顶部按钮 hover：primary 辉光 */
 .VPBackToTop:hover {
   border-color: var(--ak-primary) !important;
   box-shadow: 0 0 12px var(--vp-c-shadow-brand) !important;
@@ -1880,4 +1891,86 @@ body::after {
 .VPNavBar .VPNavBarExtra .VPMenuLink .link:hover {
   color: var(--ak-primary);
   background-color: var(--vp-c-default-soft);
+}
+
+/* ============================ E. 404 页面危险警戒主题 ============================ */
+
+/* 404 大数字：danger 红 + 辉光（shadow 变量已有明暗主题映射） */
+.NotFound .code {
+  color: var(--ak-accent) !important;
+  text-shadow: 0 0 24px var(--vp-c-shadow-danger);
+}
+
+/* 404 标题：danger 红 */
+.NotFound .title {
+  color: var(--ak-accent) !important;
+}
+
+/* 分隔线：danger 红 */
+.NotFound .divider {
+  background-color: var(--ak-accent) !important;
+}
+
+/* 引语文字：danger 红弱化 */
+.NotFound .quote {
+  color: var(--ak-accent) !important;
+  opacity: 0.82;
+}
+
+/* 返回链接：danger 红描边文字按钮 */
+.NotFound .action .link {
+  border-color: var(--ak-accent) !important;
+  color: var(--ak-accent) !important;
+}
+
+.NotFound .action .link:hover {
+  border-color: var(--ak-accent) !important;
+  color: var(--ak-accent) !important;
+  filter: brightness(0.82);
+}
+
+/* ---- 404 页面顶栏：danger 红主题（仅限 404，通过 Layout.vue 注入的 is-404-page 类限定） ---- */
+
+/* 顶栏背景：accent 透明红（桌面端 VPNavBar 本身透明，由 content-body 承载底色） */
+.is-404-page .VPNavBar:not(.home) {
+  background-color: rgba(246, 84, 14, 0.1) !important;
+}
+
+.is-404-page .VPNavBar .content-body {
+  background-color: rgba(246, 84, 14, 0.1) !important;
+}
+
+/* 顶栏底部动态警戒线：黄黑 → 红黑，加宽为唯一主警戒线（危险区标识）。
+ * background 简写会重置 background-size，需同步锁定为水平周期 22.63px，保证滚动无接缝。 */
+.is-404-page .VPNavBar::after {
+  height: 6px !important;
+  background: repeating-linear-gradient(-45deg, var(--ak-accent) 0 8px, #000 8px 16px) !important;
+  background-size: 22.63px 100% !important;
+  opacity: 0.75 !important;
+}
+
+/* 顶栏分隔线：danger 红 */
+.is-404-page .VPNavBar .divider-line {
+  background-color: var(--ak-accent) !important;
+}
+
+/* 站名与菜单链接：danger 红 */
+.is-404-page .VPNavBarTitle .title,
+.is-404-page .VPNavBar .VPNavBarMenuLink .link {
+  color: var(--ak-accent) !important;
+}
+
+.is-404-page .VPNavBar .VPNavBarMenuLink .link:hover {
+  color: var(--ak-accent) !important;
+  filter: brightness(1.2);
+}
+
+/* 站名终端编号后缀：danger 红 */
+.is-404-page .VPNavBarTitle .title::after {
+  color: var(--ak-accent) !important;
+}
+
+/* 社交链接图标：danger 红 */
+.is-404-page .VPNavBar .VPNavBarSocialLinks .icon {
+  color: var(--ak-accent) !important;
 }

@@ -95,6 +95,14 @@ export default defineConfig({
     // https://vitepress.dev/reference/default-theme-config
     // 深色模式开关标签（覆盖默认的 "Appearance"）
     darkModeSwitchLabel: '深色模式',
+    // 404 页面文案（大数字 404 下方的标题/引语/返回链接）
+    notFound: {
+      title: '神经连接异常：未找到目标资源',
+      quote: '但如果你不改变方向，继续寻找，你可能会最终走到你想要的方向。',
+      link: '/',
+      linkText: '回到起点',
+      linkLabel: '回到起点',
+    },
     nav: [
       // {
       //   text: '博客',
@@ -105,6 +113,14 @@ export default defineConfig({
       //     { text: '归档', link: '/blogs/archives' },
       //   ],
       // },
+      {
+        text: '洛羽存储',
+        link: '/you+/',
+      },
+      {
+        text: '查看工单',
+        link: '/support/tickets/',
+      }
     ],
 
     sidebar: [
