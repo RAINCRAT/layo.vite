@@ -66,8 +66,9 @@ export default defineConfig({
       // RAINCRAT 雨绘巷
       // `(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window, document, "clarity", "script", "xw4lptvvar");`
 
-      // LAYOSERVE 泠域存储
-      `(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window, document, "clarity", "script", "xw58fwyen0");`
+      // LAYOSERVE 泠域存储：仅在非 localhost/127.0.0.1 时注入加载器，
+      // 本地开发/预览完全不加载 Clarity，避免测试数据污染统计；cookies 同意逻辑不受影响。
+      `if (location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') { (function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window, document, "clarity", "script", "xw58fwyen0"); }`
     ],
     [
       'script',

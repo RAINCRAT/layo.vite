@@ -33,7 +33,7 @@ layo.vite/                       # 仓库根（git 追踪文件全集，构建�
 ├── .trae/rules/
 │   └── git-commit-message.md    # 提交信息规范（Conventional Commits，见约定 7）
 ├── .vitepress/                  # 站点配置与主题（唯一生效入口）
-│   ├── config.js                # 站点配置（唯一生效的配置入口；head 注入：加载遮罩内联脚本、ak-ui CDN CSS、字体、Clarity、SEO meta）
+│   ├── config.js                # 站点配置（唯一生效的配置入口；head 注入：加载遮罩内联脚本、ak-ui CDN CSS、字体、Clarity 加载器（仅非 localhost/127.0.0.1 注入）、SEO meta）
 │   ├── seo.js                   # SEO/GEO 工具模块：URL 派生、页面 head 注入、robots/llms 生成
 │   ├── seo-config.js            # SEO 独立配置：所有 SEO 变量集中于此，默认沿用 config.js 的值
 │   └── theme/
