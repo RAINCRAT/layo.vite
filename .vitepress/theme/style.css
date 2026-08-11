@@ -2024,8 +2024,9 @@ body::after {
   /* 边界与文本：跟随 VitePress 明/暗变量 */
   --el-border-color: var(--vp-c-border);
   --el-border-color-light: var(--vp-c-border);
-  --el-border-color-lighter: var(--vp-c-border-soft);
-  --el-border-color-extra-light: var(--vp-c-border-soft);
+  /* VitePress 2.0 无 --vp-c-border-soft，lighter/extra-light 语义为更淡的边界线，映射到最淡的 divider */
+  --el-border-color-lighter: var(--vp-c-divider);
+  --el-border-color-extra-light: var(--vp-c-divider);
   --el-fill-color-light: var(--vp-c-bg-soft);
   --el-fill-color-lighter: var(--vp-c-bg-mute);
   --el-bg-color: var(--vp-c-bg);
@@ -2041,7 +2042,8 @@ body::after {
 .is-tickets-page .el-table {
   border: 1px solid var(--el-border-color);
   border-radius: 0;
-  --el-table-border-color: var(--vp-c-border-soft);
+  /* 单元格网格线与表格外框（--el-border-color = --vp-c-border）同色 */
+  --el-table-border-color: var(--vp-c-border);
   --el-table-header-bg-color: var(--vp-c-bg-soft);
   --el-table-header-text-color: var(--vp-c-text-2);
   --el-table-row-hover-bg-color: transparent;
@@ -2234,4 +2236,151 @@ body::after {
   font-size: 12px;
   letter-spacing: 0.14em;
   color: var(--ak-primary);
+}
+
+/* ============================ H. 加载遮罩与路由进度条（LoadingOverlay） ============================ */
+
+/* 根元素关键样式（定位/层级/底色）由组件内联，保证主题 CSS 未加载时遮罩也能遮挡首屏；
+ * 此处只补视觉：网格纹理、内容排版、进度条、失败态与内容分步入场。 */
+
+/* ---- H1. 路由切换顶部细进度条：固定顶部、ak 蓝渐变、置于导航之上 ---- */
+.route-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  z-index: 9999999;
+  pointer-events: none;
+}
+
+.route-progress__bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--ak-dark-blue), var(--ak-primary));
+  box-shadow: 0 0 8px var(--vp-c-shadow-brand-strong);
+  transition: width 0.12s linear;
+}
+
+/* ---- H2. 全屏遮罩排版：百分比居中 + 贴底横跨进度条（方舟加载风格） ---- */
+.page-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  /* 工业网格纹理与全站背景呼应（底色仍由内联样式控制，图像层叠加其上） */
+  background-image:
+    linear-gradient(var(--vp-c-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--vp-c-grid) 1px, transparent 1px);
+  background-size: 44px 44px, 44px 44px;
+}
+
+/* 大百分比：终端字体 + ak 蓝辉光 */
+.page-loader__pct {
+  font-family: var(--ak-font-serif);
+  font-size: clamp(4rem, 14vw, 10rem);
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  color: var(--ak-primary);
+  text-shadow: 0 0 28px var(--vp-c-shadow-brand-strong);
+}
+
+/* 贴底进度条：横跨全屏、ak 蓝渐变 */
+.page-loader__track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 4px;
+  background-color: var(--vp-c-border);
+}
+
+.page-loader__bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--ak-dark-blue), var(--ak-primary) 45%, var(--ak-yellow));
+  box-shadow: 0 0 12px var(--vp-c-shadow-brand-strong);
+  transition: width 0.15s linear;
+}
+
+/* ---- H3. 失败态：错误提示 + 刷新重试 ---- */
+.page-loader__fail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 0 24px;
+  text-align: center;
+}
+
+.page-loader__fail-title {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--ak-accent);
+}
+
+.page-loader__fail-hint {
+  margin: 0;
+  color: var(--vp-c-text-2);
+}
+
+/* 重试按钮：直角 + ak 蓝（同 .VPButton 视觉语言） */
+.page-loader__retry {
+  margin-top: 8px;
+  padding: 0 30px;
+  line-height: 42px;
+  border: 1px solid var(--vp-button-brand-border);
+  border-radius: 0;
+  background-color: var(--vp-button-brand-bg);
+  color: var(--vp-button-brand-text);
+  font-family: var(--ak-font-sans);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.page-loader__retry:hover {
+  background-color: var(--vp-button-brand-hover-bg);
+  border-color: var(--vp-button-brand-hover-border);
+}
+
+/* ---- H4. 遮罩过渡：淡出（首屏初始渲染不触发进入动画，仅防 HMR 跳闪） ---- */
+.loader-fade-enter-active,
+.loader-fade-leave-active {
+  transition: opacity 0.45s ease;
+}
+
+.loader-fade-enter-from,
+.loader-fade-leave-to {
+  opacity: 0;
+}
+
+/* ---- H5. 内容分步入场：遮罩淡出前给 <html> 加 is-loaded，导航 → 正文 → 页脚依次浮现。
+ * 用 animation（backwards 填充）而非 transition：动画结束后无残留 transform，不影响 sticky/fixed。 ---- */
+@keyframes ak-content-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+html.is-loaded .VPNav,
+html.is-loaded .VPContent,
+html.is-loaded .VPFooter {
+  animation: ak-content-reveal 0.6s ease backwards;
+}
+
+html.is-loaded .VPContent {
+  animation-delay: 0.12s;
+}
+
+html.is-loaded .VPFooter {
+  animation-delay: 0.24s;
 }
