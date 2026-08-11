@@ -2130,7 +2130,8 @@ body::after {
   bottom: 0;
   left: 0;
   background: linear-gradient(90deg, var(--ak-dark-blue), var(--ak-primary));
-  transition: width 0.08s linear;
+  transition: width 0.05s linear;
+  will-change: width;
 }
 
 /* 斜向高光带（流动） */
