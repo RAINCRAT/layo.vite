@@ -33,14 +33,14 @@ layo.vite/                       # 仓库根（git 追踪文件全集，构建�
 ├── .trae/rules/
 │   └── git-commit-message.md    # 提交信息规范（Conventional Commits，见约定 7）
 ├── .vitepress/                  # 站点配置与主题（唯一生效入口）
-│   ├── config.js                # 站点配置（唯一生效的配置入口；head 注入：加载遮罩内联脚本、ak-ui CDN CSS、字体、Clarity、SEO meta）
+│   ├── config.js                # 站点配置（唯一生效的配置入口；head 注入：加载遮罩内联脚本、字体、Clarity、SEO meta）
 │   ├── seo.js                   # SEO/GEO 工具模块：URL 派生、页面 head 注入、robots/llms 生成
 │   ├── seo-config.js            # SEO 独立配置：所有 SEO 变量集中于此，默认沿用 config.js 的值
 │   └── theme/
-│       ├── index.js             # 主题入口（唯一生效入口，extends DefaultTheme，注册 VPB 组件，enhanceApp 初始化 Cookie 同意）
+│       ├── index.js             # 主题入口（唯一生效入口，extends DefaultTheme，注册 VPB 组件，引入 ak-ui npm 包样式 + 本地覆盖，enhanceApp 初始化 Cookie 同意）
 │       ├── Layout.vue           # 组合布局：博客文章/作者页插槽（VPB）+ Cookie 按钮插槽（nav-bar-content-after）+ 回到顶部（layout-bottom）+ 工单页 is-tickets-page 标记（加宽内容区）+ 404 页 is-404-page 标记 + 全站加载遮罩（LoadingOverlay）
 │       ├── VPBHome.vue          # VPBHome 本地副本（原版把博客大标题渲染为 h2 致页面缺 h1；副本改 h1，其余与原版一致，见约定 15）
-│       ├── style.css            # 全局样式与 ak-ui 组件替换（保留双份规则），各区块见约定 11
+│       ├── style.css            # 全局样式 + ak-ui 品牌化覆盖（对齐 npm 包 0.2.1，各区块见约定 11）
 │       ├── cookie-consent.js    # 第三方 Cookie 同意管理器（vanilla-cookieconsent）+ Clarity 同意同步
 │       ├── CookieConsentButton.vue # 导航栏右上角手动弹出 Cookie 偏好设置按钮（nav-bar-content-after 插槽引入）
 │       ├── BackToTop.vue        # 全站右下角回到顶部按钮（VPBackToTop 类，基础样式见 style.css）
@@ -73,23 +73,23 @@ layo.vite/                       # 仓库根（git 追踪文件全集，构建�
 
 1. **主题入口只允许 `theme/index.js`**。不要新增 `index.ts`：Vite 按 `.js` → `.ts` 顺序解析，`.ts` 会被 `.js` 遮蔽而永远不生效。
 2. **配置入口只允许 `config.js`**。不要新增 `config.mts`，同样会被遮蔽。
-3. **ak-ui 样式"保留双份"规则**：当需要用 ak-ui 类名替换原有样式名时，复制一份 `ak-*` 规则改名为目标名（如 `.ak-button` → `.button`），**不要直接修改原 `.ak-*` 规则**，保证两套类名同时可用。所有替换集中在 `theme/style.css` 的"ak-ui 组件替换"区块。
+3. **ak-ui 集成方式：npm 包 + 品牌化覆盖，不再"保留双份"镜像**：组件基础样式由 `@yunyoujun/ak-ui`（当前 0.2.1，与 GitHub master 同步）在 `theme/index.js` 以 `import '@yunyoujun/ak-ui/style.css'` 引入（**不要**回退到旧版 `dist/ak-ui.css` 子路径或 CDN，也不要改用 `tokens.css` 单独引入）。站内自有的标记直接使用真实 `.ak-*` 模块类（如 `.ak-icon`）；VitePress/VPB/Element Plus 等第三方组件无法加 `.ak-*` 类，统一在 `theme/style.css` 的"ak-ui 组件品牌化覆盖"区块（A 区块，见约定 11）按官方模块规范覆盖其样式。严禁再复制 `.ak-*` 规则改名别名（旧"保留双份"镜像区块已删除）。
 4. **覆盖 VitePress 内置 scoped 样式必须加 `!important`**（如 `.VPButton`、`.VPFeature`、`.VPHero .name`）。
 5. **不要修改 `node_modules`**。对 ak-ui 的定制一律通过 `style.css` 覆盖实现（CI 重装依赖后 node_modules 会还原）。
 6. 首页 Hero 标题宽度覆盖位于 `style.css` 中 `.VPHero .name` 的 `max-width` 规则。
 7. 提交信息遵循 Conventional Commits（见 `.trae/rules/git-commit-message.md`）：`<type>(<scope>): <subject>`，type 小写英文、subject 中文，一次提交一个核心改动。
 8. 构建产物与缓存已被 `.gitignore` 忽略，不要提交。忽略范围覆盖多目录构建场景：根目录（`.vitepress/dist`、`.vitepress/cache`、`.vitepress/.temp`）与子目录（`./blogs/.vitepress/`、`./docs/.vitepress/` 的 `dist`/`cache`）。
-9. 网络资源（如 ak-ui CDN CSS、Google 字体 Noto Sans/Serif SC）通过 `config.js` 的 `head` 配置注入。
+9. 网络资源（Google 字体 Noto Sans/Serif SC 等）通过 `config.js` 的 `head` 配置注入；ak-ui 样式已由 npm 包在 `theme/index.js` 打包引入，**不走 CDN**（旧 jsDelivr 链接已失效）。
 10. 每次完成任务后检查是否需要更新 `AGENTS.md`。
 11. **`theme/style.css` 区块约定**（新增样式按对应区块归类追加，不另起炉灶）：
     - 变量映射（顶部）：`--ak-*` 调色板/字体变量 → `--vp-c-*`（明/暗双主题）、`--vp-button-*`、`--vp-home-hero-*`、`--vp-custom-block-*`。新增全站风格化时优先改变量映射，避免硬编码颜色。
-    - 文档风格化（导航/侧边栏/代码块/表格/引用/滚动条）："组件细节"区块。
-    - 明日方舟强化装饰（卡片斜切角/角标、背景扫描线与六边形徽标、导航警示条纹、按钮光带动效）：末尾"明日方舟风格化增强"区块。
-    - 工单系统（Element Plus）方舟化："G. 工单系统（Element Plus）方舟化"区块，以 `.is-tickets-page` 前缀限定（EP 仅存在于工单页），新增 el 组件样式追加到该区块。
+    - 文档风格化（导航/侧边栏/代码块/表格/引用/滚动条）："组件细节"区块；分隔线 `vp-doc hr` 对齐 `.ak-divider` 模块（两段式粗杠）。
+    - ak-ui 组件品牌化覆盖："A. 表面分层与按钮/卡片契约"区块（对齐官方 `.ak-button`/`.ak-card` 编译产物：方块几何、50px 高、hover 提亮+浮起、active 压暗遮罩；`.VPButton`/`.VPFeature`/`.vpb-card` 覆盖），其后跟随 B（背景装饰，已移除项说明）/C（交互动效）/D（焦点）/F（导航更多菜单）/E（404 红主题）/G（工单 EP 方舟化）/H（加载遮罩）等区块。真实 `.ak-*` 类的品牌字面量覆盖（如 `.ak-button--action` 官方 #2bf → 品牌主蓝）也集中在本区块。
+    - 工单系统（Element Plus）方舟化："G. 工单系统（Element Plus）方舟化"区块，以 `.is-tickets-page` 前缀限定（EP 仅存在于工单页），新增 el 组件样式追加到该区块；el-tag 几何对齐官方 `.ak-tag`（左上信号条 `::before` + 右上 45° 斜切角 `clip-path`）。
     - 加载遮罩与顶部进度条："H. 页面加载遮罩与顶部进度条"区块；其中遮罩 DOM 与进度条 track/bar 的定位/尺寸/底色/渐变关键样式由 head 内联脚本（theme/loader.js）内联，保证主题 CSS 未加载时即时可见。
     - 层叠约定：Cookie 同意窗口（`#cc-main` 的 `--cc-z-index`）固定为 9999880，置于加载遮罩（z-index: 9999990）之下，防止首次加载时挡住遮罩内日志终端。
     - 导航栏 40px 方形图标按钮（Cookie 偏好/社交链接）统一描边："导航图标按钮规范"区块，新增同类按钮把类名加入其公共选择器即可继承。
-12. **ak-color 约束：不创建 ak-ui 未定义的 `--ak-*` 颜色变量**。ak-ui 官方调色板仅有 blue/dark-blue/light-blue/yellow/gray/dark/low/basic/primary/secondary/advanced；全站 danger/红色系统一复用既有 `--ak-accent`（#f6540e）与 `--vp-c-shadow-danger`（明暗映射）。新色一律改从上述变量派生，严禁自造。
+12. **ak-color 约束：不创建 ak-ui 未定义的 `--ak-*` 颜色变量**。ak-ui 官方调色板（0.2.1 `--ak-color-*` 命名空间）仅有 white/black/low/basic/primary/secondary/advanced/accent/blue/yellow/dark-blue/light-blue/gray/dark；全站 danger/红色系统一复用既有 `--ak-accent`（#f6540e）与 `--vp-c-shadow-danger`（明暗映射）。新色一律改从上述变量派生，严禁自造；组件内字面量（如 `.ak-button--action` 编译产物 #2bf）在"ak-ui 组件品牌化覆盖"区块用覆盖规则对齐品牌，不动 npm 包源码。
 13. **404 页面主题约定**：
     - 根标识：`theme/Layout.vue` 依据 `page.isNotFound` 给根 Layout 注入 `is-404-page` 类；所有 404 专属样式以 `.is-404-page` / `.NotFound` 为前缀限定，避免污染全站。
     - 位置：404 红色主题（内容元素 + 顶栏红 + 顶栏底部唯一主警戒线）集中在 `style.css` 末尾"404 页面危险警戒主题"区块。

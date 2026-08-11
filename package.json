@@ -2,7 +2,7 @@
   "devDependencies": {
     "@chunge16/vitepress-blogs-theme": "^1.0.0",
     "@tailwindcss/vite": "^4.3.3",
-    "@yunyoujun/ak-ui": "^0.0.1",
+    "@yunyoujun/ak-ui": "^0.2.1",
     "tailwindcss": "^4.3.3",
     "vitepress": "^2.0.0-alpha.19"
   },
