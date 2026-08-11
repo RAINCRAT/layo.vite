@@ -22,6 +22,7 @@
   --ak-dark: #222;
   --ak-font-serif: "Rajdhani", "Noto Serif SC", "Noto Serif", "Songti SC", "STSong", "SimSun", serif;
   --ak-font-sans: "Rajdhani", "Noto Sans SC", "Noto Sans", Roboto, "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
+  --ak-font-pixel: "Consolas", "Menlo", "Monaco", "Liberation Mono", "Courier New", monospace; /* 终端等宽字（设备自带，无需网络加载） */
 
   /* 辉光/描边变量（CDN keyframes 默认白色，在亮色主题下不可见，故改为 ak 主色系） */
   --ak-fx-glow-color: var(--ak-primary);
@@ -2381,7 +2382,7 @@ body::after {
   transition: width 0.25s ease;
 }
 
-/* ---- 背景加载日志：遮罩背景底部淡色小字（宽度撑满窗口，无面板底色/边框/标题/着色，仅低对比信息，不干扰主体） ---- */
+/* ---- 背景加载日志：遮罩背景底部淡色点阵小字（宽度撑满窗口，无面板底色/边框/标题/着色，仅低对比信息，不干扰主体） ---- */
 .page-loader__debug {
   position: fixed;
   left: 0;
@@ -2394,11 +2395,12 @@ body::after {
   margin: 0;
   padding: 0 16px;
   list-style: none;
-  font-family: var(--ak-font-mono, monospace);
+  font-family: var(--ak-font-pixel);
   font-size: 10px;
   line-height: 1.5;
   letter-spacing: 0.04em;
   color: var(--vp-c-text-3);
+  opacity: 0.6; /* 降低可见度：背景终端信息进一步弱化，不干扰主体 */
   pointer-events: none;
   /* max-height: 40vh;
   overflow: hidden; */
