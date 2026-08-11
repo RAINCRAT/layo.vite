@@ -32,7 +32,7 @@ function toTop() {
     title="回到顶部"
     @click="toTop"
   >
-    <svg class="VPBackToTop__icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <svg class="ak-icon VPBackToTop__icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path
         d="M12 19V5M6 11l6-6 6 6"
         stroke="currentColor"

@@ -133,7 +133,7 @@ function onBack() {
 
 /* 终端式小标题（CSS 伪元素，无需改模板） */
 .ticket-header__timeline::before {
-  content: "// 事项碎片";
+  content: "// 事相碎片";
   display: block;
   margin-bottom: 14px;
   font-family: var(--ak-font-serif);
@@ -220,7 +220,7 @@ function onBack() {
   font-size: inherit;
   line-height: inherit;
   font-weight: 600;
-  background-color: rgba(74, 171, 234, 0.22);
+  background-color: color-mix(in srgb, var(--ak-primary) 22%, transparent);
   color: var(--vp-c-brand-1);
   box-shadow: 0 0 4px var(--vp-c-shadow-brand);
 }

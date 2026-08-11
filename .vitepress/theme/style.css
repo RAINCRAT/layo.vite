@@ -1,11 +1,15 @@
 /**
  * ak-ui 明日方舟风格主题
- * 调色板参考 https://ak-ui.yunyoujun.cn/components/（道具色彩分级）
- * 字体参考 https://ak-ui.yunyoujun.cn/components/#typography-字体
- * 组件取值基准：https://cdn.jsdelivr.net/gh/YunYouJun/ak-ui@gh-pages/css/ak-ui.min.css
+ * 组件基础样式由 npm 包 @yunyoujun/ak-ui（0.2.1，与 GitHub master 同步）提供，
+ * 经 theme/index.js `import '@yunyoujun/ak-ui/style.css'` 引入；本文件仅做品牌化覆盖。
+ * 官方源码：https://github.com/YunYouJun/ak-ui（src/scss/_tokens.scss、_variables.scss）
  */
 
-/* ak-ui 调色板与字体 */
+/* ak-ui 调色板与字体
+ * 调色板取值对齐 ak-ui 官方（src/scss/_variables.scss）：
+ * $colors = blue/dark-blue/light-blue/yellow/gray/dark，$ak-colors = white/black/low/basic/primary/secondary/advanced，
+ * 0.2.1 新增 --ak-color-* 调色板命名空间与 accent（#f6540e）。
+ * --ak-accent（#f6540e）为项目既有约定的集中强调/危险色（见约定 12）。 */
 :root {
   --ak-low: #9c9c9c;
   --ak-basic: #d8dd5a;
@@ -13,21 +17,97 @@
   --ak-secondary: #cfc2d1;
   --ak-advanced: #f1c644;
   --ak-accent: #f6540e;
-  /* 全部归一到 ak-primary（站点配色统一，Blue/Light Blue 仅作调色板别名保留） */
-  --ak-blue: var(--ak-primary);
+  --ak-blue: #00b3fd;
   --ak-yellow: #ffd802;
   --ak-dark-blue: #0075a8;
-  --ak-light-blue: var(--ak-primary);
+  --ak-light-blue: #3ff7ff;
   --ak-gray: #313131;
   --ak-dark: #222;
-  --ak-font-serif: "Rajdhani", "Noto Serif SC", "Noto Serif", "Songti SC", "STSong", "SimSun", serif;
-  --ak-font-sans: "Rajdhani", "Noto Sans SC", "Noto Sans", Roboto, "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
+  --ak-white: #fff;
+  --ak-black: #000;
+  --ak-font-serif: "Rajdhani", "Noto Serif SC Variable", "Noto Serif SC", "Noto Serif", "Songti SC", "STSong", "SimSun", serif;
+  --ak-font-sans: "Rajdhani", "Noto Sans SC Variable", "Noto Sans SC", "Noto Sans", Roboto, "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
+  /* 主命令字面：ak-ui 官方 token 规定为衬线（--ak-font-command: var(--ak-font-serif)），
+   * 标题/命令统一使用；正文与控件用 --ak-font-sans */
+  --ak-font-command: var(--ak-font-serif);
   --ak-font-pixel: "Consolas", "Menlo", "Monaco", "Liberation Mono", "Courier New", monospace; /* 终端等宽字（设备自带，无需网络加载） */
 
   /* 辉光/描边变量（CDN keyframes 默认白色，在亮色主题下不可见，故改为 ak 主色系） */
   --ak-fx-glow-color: var(--ak-primary);
   --ak-outline-color: var(--ak-primary);
   --ak-loading-color: var(--ak-yellow);
+
+  /* 新版 ak-ui 0.2.1 调色板命名空间（--ak-color-*，官方 tokens；组件经 var(--ak-color-*) 消费）。
+   * 取值对齐 ak-ui 官方 palette，品牌主蓝沿用项目既有 --ak-primary（= 官方 primary #4aabea），
+   * 黄/橙与官方一致（yellow #ffd802 / accent #f6540e）。注意：组件内字面量（如 .ak-button--action
+   * 编译产物为 #2bf）不随此覆盖，需在『品牌化覆盖』区用覆盖规则对齐品牌。 */
+  --ak-color-white: #fff;
+  --ak-color-black: #000;
+  --ak-color-low: var(--ak-low);
+  --ak-color-basic: var(--ak-basic);
+  --ak-color-primary: var(--ak-primary);
+  --ak-color-secondary: var(--ak-secondary);
+  --ak-color-advanced: var(--ak-advanced);
+  --ak-color-accent: var(--ak-accent);
+  --ak-color-blue: var(--ak-primary);
+  --ak-color-yellow: var(--ak-yellow);
+  --ak-color-dark-blue: var(--ak-dark-blue);
+  --ak-color-light-blue: var(--ak-light-blue);
+  --ak-color-gray: var(--ak-gray);
+  --ak-color-dark: var(--ak-dark);
+}
+
+/* ak-ui 语义角色（system 强度，项目级品牌映射）
+ * 值惰性引用 --vp-c-*（明暗自动适配）；消费侧一律引用语义角色，不再散落三元组/色值。 */
+:root {
+  /* 信号色：信息=蓝 / 动作·警告=黄 / 集中强调=橙 / 危险=红 / 成功=绿 / 禁用=灰。
+   * 危险沿用既有 --ak-accent（项目约定，保证 404 红主题/工单/加载失败等特色视觉不变）；
+   * 成功绿复用 Element Plus 语义色（工单页既有）。 */
+  --ak-signal-info: var(--ak-primary);
+  --ak-signal-action: var(--ak-yellow);
+  --ak-signal-accent: var(--ak-accent);
+  --ak-signal-danger: var(--ak-accent);
+  --ak-signal-success: #67c23a;
+  --ak-signal-disabled: var(--ak-low);
+
+  /* 表面层级 */
+  --ak-surface-canvas: var(--vp-c-bg);
+  --ak-surface-panel: var(--vp-c-bg-elv);
+  --ak-surface-muted: var(--vp-c-bg-soft);
+  --ak-surface-raised: var(--vp-c-bg-elv);
+  --ak-surface-inverse: var(--ak-dark);
+
+  /* 文本 */
+  --ak-text-primary: var(--vp-c-text-1);
+  --ak-text-secondary: var(--vp-c-text-2);
+  --ak-text-inverse: var(--ak-white);
+
+  /* 品牌色派生柔化（替代散落的 rgba(74,171,234,x) 等三元组，统一经 color-mix 派生） */
+  --ak-info-faint: color-mix(in srgb, var(--ak-primary) 5%, transparent);
+  --ak-info-tint: color-mix(in srgb, var(--ak-primary) 8%, transparent);
+  --ak-info-soft: color-mix(in srgb, var(--ak-primary) 14%, transparent);
+  --ak-action-soft: color-mix(in srgb, var(--ak-yellow) 12%, transparent);
+  --ak-accent-soft: color-mix(in srgb, var(--ak-accent) 10%, transparent);
+
+  /* 几何 */
+  --ak-cut-sm: 8px;
+  --ak-cut-md: 16px;
+  --ak-cut-lg: 24px;
+  --ak-radius-subtle: 8px;
+
+  /* 动效与焦点 */
+  --ak-motion-fast: 0.12s;
+  --ak-motion-base: 0.2s;
+  --ak-motion-slow: 0.45s;
+  --ak-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ak-ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
+  --ak-focus-color: var(--ak-primary);
+  --ak-focus-width: 2px;
+  --ak-focus-offset: 2px;
+
+  /* 密度 */
+  --ak-density-control-height: 44px;
+  --ak-density-panel-padding: 1rem;
 }
 
 /**
@@ -38,7 +118,7 @@
   --vp-c-brand-1: #0e86b8;
   --vp-c-brand-2: var(--ak-dark-blue);
   --vp-c-brand-3: var(--ak-primary);
-  --vp-c-brand-soft: rgba(74, 171, 234, 0.14);
+  --vp-c-brand-soft: var(--ak-info-soft);
   /* 兼容旧变量 */
   --vp-c-brand: var(--vp-c-brand-1);
   --vp-c-brand-light: var(--vp-c-brand-2);
@@ -46,9 +126,10 @@
   --vp-c-brand-lightest: #9ec9ef;
   --vp-c-brand-dark: var(--ak-dark-blue);
   --vp-c-brand-darker: #00547a;
-  --vp-c-brand-dimm: rgba(74, 171, 234, 0.08);
+  --vp-c-brand-dimm: var(--ak-info-tint);
 
   --vp-font-family-base: var(--ak-font-sans);
+  --vp-font-family-heading: var(--ak-font-command);
 
   --vp-c-bg: #f7f9fc;
   --vp-c-bg-soft: #eef1f6;
@@ -66,19 +147,16 @@
   --vp-nav-bg-color: rgba(247, 249, 252, 0.72);
   --vp-sidebar-bg-color: var(--vp-c-bg-alt);
 
-  /* 全站工业网格纹理颜色（方舟风背景） */
-  --vp-c-grid: rgba(30, 36, 48, 0.085);
-
-  /* 组件阴影（亮色）：阴影色取组件边缘色的同色系低透明度版本 */
+  /* 组件阴影（亮色）：阴影色取组件边缘色的同色系低透明度版本（经 color-mix 从品牌 token 派生） */
   --vp-c-shadow: rgba(30, 36, 48, 0.34);
   --vp-c-shadow-inset: rgba(30, 36, 48, 0.18);
   /* 蓝边缘阴影：与 ak primary 边缘（代码块左缘/特性卡条/brand 按钮）同色 */
-  --vp-c-shadow-brand: rgba(74, 171, 234, 0.4);
-  --vp-c-shadow-brand-strong: rgba(74, 171, 234, 0.5);
-  /* 黄边缘阴影：与 ak-basic 边缘同色 */
-  --vp-c-shadow-warning: rgba(216, 221, 90, 0.3);
+  --vp-c-shadow-brand: color-mix(in srgb, var(--ak-primary) 40%, transparent);
+  --vp-c-shadow-brand-strong: color-mix(in srgb, var(--ak-primary) 50%, transparent);
+  /* 黄边缘阴影：与 ak 动作/警告边缘同色 */
+  --vp-c-shadow-warning: color-mix(in srgb, var(--ak-signal-action) 30%, transparent);
   /* 橙边缘阴影：与 ak-accent 边缘同色 */
-  --vp-c-shadow-danger: rgba(246, 84, 14, 0.32);
+  --vp-c-shadow-danger: color-mix(in srgb, var(--ak-accent) 32%, transparent);
 
   /* VPB 博客主题变量映射（覆盖 @chunge16/vitepress-blogs-theme 的米白/绿黑系为 ak 方舟蓝灰系）。
    * vpb 样式表加载顺序靠后，故用 !important 确保覆盖；值引用 var(--vp-c-*) 惰性求值，明暗主题自动适配。 */
@@ -86,12 +164,13 @@
   --vpb-bg-soft: var(--vp-c-bg-soft) !important;
   --vpb-bg-strong: var(--vp-c-bg-elv) !important;
   --vpb-panel-border: var(--vp-c-border) !important;
-  --vpb-panel-shadow: 0 18px 40px var(--vp-c-shadow-inset) !important;
-  --vpb-panel-shadow-hover: 0 26px 56px var(--vp-c-shadow) !important;
+  /* 面板阴影收敛：vpb 默认 18/40px、hover 26/56px 过重，克制到 ak 分层表面量级 */
+  --vpb-panel-shadow: 0 8px 24px var(--vp-c-shadow-inset) !important;
+  --vpb-panel-shadow-hover: 0 16px 36px var(--vp-c-shadow) !important;
   --vpb-text-strong: var(--vp-c-text-1) !important;
   --vpb-text-soft: var(--vp-c-text-2) !important;
-  --vpb-grid-line: var(--vp-c-grid) !important;
-  /* 去掉 vpb 薄荷绿顶部光晕，body 背景由下方 "html body" 规则全权控制（含方舟网格纹理） */
+  --vpb-grid-line: transparent !important;
+  /* 去掉 vpb 薄荷绿顶部光晕，body 背景由下方 "html body" 规则全权控制（中性分层表面，无网格） */
   --vpb-accent-glow: none !important;
 }
 
@@ -103,7 +182,7 @@
   --vp-c-brand-1: var(--ak-primary);
   --vp-c-brand-2: var(--ak-primary);
   --vp-c-brand-3: var(--ak-dark-blue);
-  --vp-c-brand-soft: rgba(74, 171, 234, 0.16);
+  --vp-c-brand-soft: var(--ak-info-soft);
   /* 兼容旧变量 */
   --vp-c-brand: var(--vp-c-brand-1);
   --vp-c-brand-light: var(--vp-c-brand-2);
@@ -111,7 +190,7 @@
   --vp-c-brand-lightest: #a5d0ef;
   --vp-c-brand-dark: var(--ak-dark-blue);
   --vp-c-brand-darker: #00547a;
-  --vp-c-brand-dimm: rgba(74, 171, 234, 0.08);
+  --vp-c-brand-dimm: var(--ak-info-tint);
 
   --vp-c-bg: #030303;
   --vp-c-bg-soft: #1e2129;
@@ -129,16 +208,13 @@
   --vp-nav-bg-color: rgba(3, 3, 3, 1);
   --vp-sidebar-bg-color: var(--vp-c-bg-alt);
 
-  /* 全站工业网格纹理颜色（方舟风背景，暗色） */
-  --vp-c-grid: rgba(255, 255, 255, 0.07);
-
   /* 组件阴影（暗色）：亮色用灰影、暗色用白影；白边黑内组件阴影与白边同色，彩晕提亮增强辉光 */
   --vp-c-shadow: rgba(255, 255, 255, 0.3);
   --vp-c-shadow-inset: rgba(255, 255, 255, 0.15);
-  --vp-c-shadow-brand: rgba(74, 171, 234, 0.45);
-  --vp-c-shadow-brand-strong: rgba(74, 171, 234, 0.6);
-  --vp-c-shadow-warning: rgba(216, 221, 90, 0.4);
-  --vp-c-shadow-danger: rgba(246, 84, 14, 0.5);
+  --vp-c-shadow-brand: color-mix(in srgb, var(--ak-primary) 45%, transparent);
+  --vp-c-shadow-brand-strong: color-mix(in srgb, var(--ak-primary) 60%, transparent);
+  --vp-c-shadow-warning: color-mix(in srgb, var(--ak-signal-action) 40%, transparent);
+  --vp-c-shadow-danger: color-mix(in srgb, var(--ak-accent) 50%, transparent);
 }
 
 /**
@@ -186,11 +262,10 @@
   }
 }
 
-/* Hero 标题：放宽宽度限制、加粗（对应 .ak-text--title）、光晕呼吸动画 */
+/* Hero 标题：放宽宽度限制、加粗（对应 .ak-text--title）。不再使用呼吸辉光（辉光收敛为局部反馈） */
 .VPHero .name {
   max-width: 700px !important;
   font-weight: 900 !important;
-  animation: ak-hero-glow 2s ease-in-out infinite alternate;
 }
 
 @media (min-width: 640px) {
@@ -199,36 +274,26 @@
   }
 }
 
-@keyframes ak-hero-glow {
-  from {
-    filter: drop-shadow(0 0 2px rgba(74, 171, 234, 0.25));
-  }
-
-  to {
-    filter: drop-shadow(0 0 22px rgba(74, 171, 234, 0.55));
-  }
-}
-
 /**
  * Component: Custom Block（按 ak 分级配色）
  * -------------------------------------------------------------------------- */
 
 :root {
-  --vp-custom-block-tip-border: var(--vp-c-brand-3);
+  --vp-custom-block-tip-border: var(--ak-signal-info);
   --vp-custom-block-tip-text: var(--vp-c-brand-1);
   --vp-custom-block-tip-bg: var(--vp-c-brand-soft);
 
   --vp-custom-block-note-border: var(--vp-c-divider);
   --vp-custom-block-note-text: var(--vp-c-text-2);
-  --vp-custom-block-note-bg: var(--vp-c-bg-soft);
+  --vp-custom-block-note-bg: var(--ak-surface-muted);
 
-  --vp-custom-block-warning-border: var(--ak-basic);
+  --vp-custom-block-warning-border: var(--ak-signal-action);
   --vp-custom-block-warning-text: #6f7218;
-  --vp-custom-block-warning-bg: rgba(216, 221, 90, 0.12);
+  --vp-custom-block-warning-bg: var(--ak-action-soft);
 
-  --vp-custom-block-danger-border: var(--ak-accent);
+  --vp-custom-block-danger-border: var(--ak-signal-danger);
   --vp-custom-block-danger-text: #b3440a;
-  --vp-custom-block-danger-bg: rgba(246, 84, 14, 0.1);
+  --vp-custom-block-danger-bg: var(--ak-accent-soft);
 }
 
 .dark {
@@ -236,13 +301,13 @@
   --vp-custom-block-tip-text: var(--vp-c-brand-1);
   --vp-custom-block-tip-bg: var(--vp-c-brand-soft);
 
-  --vp-custom-block-warning-border: var(--ak-basic);
-  --vp-custom-block-warning-text: var(--ak-basic);
-  --vp-custom-block-warning-bg: rgba(216, 221, 90, 0.1);
+  --vp-custom-block-warning-border: var(--ak-signal-action);
+  --vp-custom-block-warning-text: var(--ak-signal-action);
+  --vp-custom-block-warning-bg: var(--ak-action-soft);
 
-  --vp-custom-block-danger-border: var(--ak-accent);
-  --vp-custom-block-danger-text: var(--ak-accent);
-  --vp-custom-block-danger-bg: rgba(246, 84, 14, 0.1);
+  --vp-custom-block-danger-border: var(--ak-signal-danger);
+  --vp-custom-block-danger-text: var(--ak-signal-danger);
+  --vp-custom-block-danger-bg: var(--ak-accent-soft);
 }
 
 /* custom-block 阴影：阴影色取各自彩色边缘色（1px 边缘配小投影 + 同色微晕） */
@@ -263,65 +328,65 @@
 }
 
 /**
- * 全站背景：深色工业风底 + 双向微光晕
+ * 全站背景：中性分层表面（ak-ui system，无网格/光晕等装饰）
  * -------------------------------------------------------------------------- */
 
 html {
-  /* 越界回弹（overscroll）会把内容整体下拉/横移、只露出根元素底色，导致网格/辉光在边缘穿帮。
+  /* 越界回弹（overscroll）会把内容整体下拉/横移、只露出根元素底色。
    * 1) overscroll-behavior: none 直接禁止四向回弹露底（Chrome/Edge/Firefox/Safari 16+）；
-   * 2) 根元素补齐同锚点网格 + 底色作为兜底，老版 iOS Safari 回弹时露出的区域也能无缝延续。 */
+   * 2) 根元素补齐底色作为兜底，老版 iOS Safari 回弹时露出的区域也能无缝延续。 */
   overscroll-behavior: none;
-  background-color: var(--vp-c-bg);
-  background-image:
-    linear-gradient(var(--vp-c-grid) 1px, transparent 1px),
-    linear-gradient(90deg, var(--vp-c-grid) 1px, transparent 1px),
-    linear-gradient(180deg, var(--vp-c-bg-alt), var(--vp-c-bg));
-  background-size: 44px 44px, 44px 44px, auto;
+  background-color: var(--ak-surface-canvas);
 }
 
-/* 覆盖 VPB 主题的 body 规则：vpb 的 `body`/`.dark body` 用 background 简写吞掉了网格层，
- * 且加载顺序靠后，故用 `html body`（含 !important）确保方舟工业网格纹理与底色生效 */
+/* 覆盖 VPB 主题的 body 规则：vpb 的 `body`/`.dark body` 用 background 简写覆盖底色，
+ * 且加载顺序靠后，故用 `html body`（含 !important）确保中性表面底色生效（ak-ui system 层级） */
 html body {
   overscroll-behavior: none;
-  /* 全局字重上调，贴近明日方舟粗黑风格 */
+  /* 全局字重上调，贴近明日方舟粗黑风格；正文/控件用无衬线（ak-ui：prose 走 sans，命令走 serif） */
   font-weight: 450;
   font-family: var(--ak-font-sans);
   letter-spacing: normal;
-  color: var(--vp-c-text-1);
-  background-image:
-    /* 方舟工业网格纹理（scroll：与 html 网格同锚点，回弹时边缘无缝衔接） */
-    linear-gradient(var(--vp-c-grid) 1px, transparent 1px),
-    linear-gradient(90deg, var(--vp-c-grid) 1px, transparent 1px),
-    radial-gradient(1100px 560px at 10% -12%, var(--vp-c-brand-soft), transparent 62%),
-    radial-gradient(900px 520px at 104% 12%, rgba(255, 216, 2, 0.05), transparent 55%),
-    linear-gradient(180deg, var(--vp-c-bg-alt), var(--vp-c-bg)) !important;
-  background-size: 44px 44px, 44px 44px, auto, auto, auto !important;
-  /* 网格随文档滚动（与 html 对齐），辉光与底色固定在视口 */
-  background-attachment: scroll, scroll, fixed, fixed, fixed !important;
-  background-color: var(--vp-c-bg) !important;
+  color: var(--ak-text-primary);
+  background-image: linear-gradient(180deg, var(--vp-c-bg-alt), var(--vp-c-bg)) !important;
+  background-color: var(--ak-surface-canvas) !important;
 }
 
 /* 覆盖 VPB 主题的字体规则：vpb 加载顺序靠后，用 html 前缀提高特异性确保覆盖，
- * 将 vpb 的衬线标题改回 ak 方舟粗黑无衬线风格 */
+ * 将 vpb 的默认衬线标题统一为 ak-ui 命令字面（--ak-font-command = 衬线粗黑）。
+ * 字重按层级加重：h1 900（同 Hero/命令卡 label）、h2 800、h3 700。 */
 html .vp-doc h1,
 html .vp-doc h2,
 html .vp-doc h3 {
   border-top: none;
-  font-family: var(--ak-font-sans);
+  font-family: var(--ak-font-command);
+  font-weight: 900;
   letter-spacing: normal;
+}
+
+html .vp-doc h2 {
+  font-weight: 800;
+}
+
+html .vp-doc h3 {
+  font-weight: 700;
 }
 
 html .vp-doc h1 {
   font-size: clamp(2.8rem, 5vw, 4.2rem);
-  line-height: 1.05;
+  /* 行高对齐中文阅读舒适区间（vpb 默认 0.98 过挤，中文需 1.15+） */
+  line-height: 1.18;
 }
 
-/* 博客首页大标题与页面标题（vpb-display-title / vpb-page-title）同统一为 ak 无衬线 */
+/* 博客首页大标题与页面标题（vpb-display-title / vpb-page-title）同统一为 ak 主命令字面。
+ * 行高从 vpb 默认 0.98/0.99 提至 1.14，字距归零（中文标题不再拥挤），字重 900（ak 命令粗黑） */
 html .vpb-display-title,
 html .vpb-page-title {
   border-top: none !important;
-  font-family: var(--ak-font-sans);
-  letter-spacing: -0.01em;
+  font-family: var(--ak-font-command);
+  font-weight: 900 !important;
+  line-height: 1.14 !important;
+  letter-spacing: 0;
   color: var(--vp-c-text-1);
   /* 多行标题（frontmatter title 用 YAML 块标量换行）在此处真实换行显示 */
   white-space: pre-line;
@@ -333,9 +398,7 @@ html .vpb-page-title {
   color: #fff;
 }
 
-/* 顶部蓝色渐变辉光线（ak 蓝系 + 辉光呼吸）。
- * z-index: 0 为 .VPNavBar 建立独立层叠上下文，使底部警示条可沉底（z-index: -1）
- * 而不覆盖其下拉菜单/弹出浮窗。 */
+/* 顶部蓝色渐变辉光线（静态品牌线，不再呼吸发光）。 */
 .VPNavBar {
   position: relative;
   z-index: 0;
@@ -353,24 +416,13 @@ html .vpb-page-title {
       var(--ak-primary) 45%,
       var(--ak-primary));
   z-index: 1;
-  animation: ak-nav-glow 2s ease-in-out infinite alternate;
-}
-
-@keyframes ak-nav-glow {
-  from {
-    filter: drop-shadow(0 0 2px rgba(74, 171, 234, 0.35));
-  }
-
-  to {
-    filter: drop-shadow(0 0 10px rgba(74, 171, 234, 0.8));
-  }
 }
 
 /**
  * 组件细节
  * -------------------------------------------------------------------------- */
 
-/* 特性卡片：顶部斜切蓝条（方舟材料卡风格） */
+/* 特性卡片：顶部品牌蓝条（直角，ak-ui 几何） */
 .VPFeature {
   position: relative;
 }
@@ -383,11 +435,9 @@ html .vpb-page-title {
   width: 64px;
   height: 4px;
   background: linear-gradient(90deg, var(--ak-dark-blue), var(--ak-primary));
-  transform: skewX(-20deg);
-  transform-origin: left top;
 }
 
-/* 导航菜单链接：ak 蓝 + 底部斜切指示条 */
+/* 导航菜单链接：ak 蓝 + 底部品牌指示条（直角） */
 .VPNavBarMenuLink {
   position: relative;
 }
@@ -400,9 +450,8 @@ html .vpb-page-title {
   bottom: 0;
   height: 2px;
   background: linear-gradient(90deg, var(--ak-dark-blue), var(--ak-primary));
-  transform: skewX(-30deg);
   opacity: 0;
-  transition: opacity 0.2s;
+  transition: opacity var(--ak-motion-base);
 }
 
 .VPNavBarMenuLink:hover,
@@ -425,7 +474,7 @@ html .vpb-page-title {
   color: var(--vp-c-brand-1);
 }
 
-/* 侧边栏分组标题使用衬线体（映射 --vp-font-family-heading） */
+/* 侧边栏分组标题使用衬线体（与正文方舟粗黑命令字面形成层级对比） */
 .VPSidebarItem.level-0>.item>.text {
   font-family: var(--ak-font-serif);
   font-weight: 900;
@@ -435,7 +484,7 @@ html .vpb-page-title {
 .vp-doc blockquote {
   border-left: 4px solid var(--ak-primary);
   background-color: var(--vp-c-brand-soft);
-  border-radius: 0 8px 8px 0;
+  border-radius: 0 var(--ak-radius-subtle) var(--ak-radius-subtle) 0;
   padding: 8px 16px;
 }
 
@@ -450,7 +499,7 @@ html .vpb-page-title {
   border: 1px solid var(--vp-c-border);
   border-left: 3px solid var(--ak-primary);
   background-color: var(--vp-c-bg-alt);
-  border-radius: 8px;
+  border-radius: var(--ak-radius-subtle);
   box-shadow: 0 2px 6px var(--vp-c-shadow);
 }
 
@@ -473,20 +522,42 @@ html .vpb-page-title {
   background-color: var(--vp-c-bg-soft);
 }
 
-/* 分隔线 */
+/* 分隔线：对齐新版 .ak-divider 模块（两段式粗杠：左短 15% + 右长 50%，中间留白） */
 .vp-doc hr {
-  border-color: var(--vp-c-divider);
+  display: flex;
+  align-items: center;
+  height: 3px;
+  border: none;
+  background: none;
+  margin: 1.5rem 3rem;
+  overflow: hidden;
 }
 
-/* 文档标题使用衬线体（映射 --vp-font-family-heading） */
+.vp-doc hr::before,
+.vp-doc hr::after {
+  content: "";
+  height: 3px;
+  background-color: color-mix(in srgb, var(--vp-c-text-3) 55%, transparent);
+}
+
+.vp-doc hr::before {
+  width: 15%;
+}
+
+.vp-doc hr::after {
+  width: 50%;
+}
+
+/* 文档标题统一使用主命令字面（--ak-font-command，方舟粗黑），
+ * 与上方 html .vp-doc 规则、VPB 标题一致，消除此前衬线/无衬线重复声明 */
 .vp-doc h1,
 .vp-doc h2,
 .vp-doc h3 {
-  font-family: var(--ak-font-serif);
-  letter-spacing: 0.01em;
+  font-family: var(--ak-font-command);
+  letter-spacing: normal;
 }
 
-/* 文档 h2/h3 左侧斜切蓝条装饰（方舟风） */
+/* 文档 h2/h3 左侧品牌蓝条装饰（直角） */
 .vp-doc h2 {
   position: relative;
   padding-left: 0.7em;
@@ -500,7 +571,6 @@ html .vpb-page-title {
   bottom: 0.22em;
   width: 4px;
   background: linear-gradient(180deg, var(--ak-dark-blue), var(--ak-primary));
-  transform: skewX(-15deg);
 }
 
 .vp-doc h3 {
@@ -517,7 +587,6 @@ html .vpb-page-title {
   width: 3px;
   background: var(--ak-primary);
   opacity: 0.6;
-  transform: skewX(-15deg);
 }
 
 /* 页面滚动条（ak 灰蓝工业风） */
@@ -545,876 +614,6 @@ html .vpb-page-title {
 
 .DocSearch {
   --docsearch-primary-color: var(--vp-c-brand-1) !important;
-}
-
-/**
- * ak-ui 组件替换（保留双份）
- * 规则：为每个 ak-* 组件复制一份改名为通用名的别名，原 .ak-* 保持不变。
- * 取值基准：https://cdn.jsdelivr.net/gh/YunYouJun/ak-ui@gh-pages/css/ak-ui.min.css
- * 每条别名均标注「对应 .ak-xxx」，供逐条审查对齐。
- * 映射到 VitePress 组件（.VPButton、.VPFeature）时，
- * 需压过 scoped 样式的属性加 !important。
- * -------------------------------------------------------------------------- */
-
-/* ============================ ak-button → button ============================ */
-
-/* 对应 .ak-button */
-.button,
-.VPButton {
-  position: relative;
-  display: inline-flex !important;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--ak-font-sans);
-  outline: 0;
-  border: none !important;
-  font-size: 1rem !important;
-  font-weight: 700 !important;
-  height: 50px !important;
-  width: 150px !important;
-  border-radius: 0 !important;
-  color: #fff !important;
-  background-color: rgba(128, 128, 128, 0.95) !important;
-  box-shadow: inset 0 0 6px var(--vp-c-shadow-inset), 0 3px 8px var(--vp-c-shadow) !important;
-  transition: 0.2s;
-  padding: 0 !important;
-  cursor: pointer;
-}
-
-/* 对应 .ak-button::after */
-.button::after,
-.VPButton::after {
-  position: absolute;
-  visibility: hidden;
-  content: "";
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: transparent;
-  transition: background-color 0.2s;
-}
-
-/* 对应 .ak-button:active */
-.button:active,
-.VPButton:active {
-  box-shadow: inset 0 0 8px var(--vp-c-shadow-inset), 0 2px 6px var(--vp-c-shadow) !important;
-}
-
-/* 对应 .ak-button:active::after */
-.button:active::after,
-.VPButton:active::after {
-  content: "";
-  visibility: visible;
-  background-color: rgba(0, 0, 0, 0.1);
-}
-
-/* 对应 .ak-button--action（VPButton.brand 替换；CDN 无 hover/active 变色，固色对齐） */
-.VPButton.brand {
-  text-align: right;
-  background-color: var(--ak-primary) !important;
-  box-shadow: 0 4px 12px var(--vp-c-shadow-brand) !important;
-}
-
-.VPButton.brand:hover,
-.VPButton.brand:active {
-  background-color: var(--ak-primary) !important;
-}
-
-/* 对应 .ak-button--outline（VPButton.alt 替换；CDN 无 hover/active 变色，固色对齐） */
-.VPButton.alt {
-  border: 2px solid #fff !important;
-  font-family: var(--ak-font-sans);
-  box-shadow: 0 3px 8px var(--vp-c-shadow) !important;
-}
-
-.VPButton.alt:hover,
-.VPButton.alt:active {
-  border-color: #fff !important;
-}
-
-/* 对应 .ak-button__icon */
-.button__icon {
-  display: inline-flex;
-  width: 3rem;
-  height: 3rem;
-  fill: currentColor;
-}
-
-/* 对应 .ak-button__label */
-.button__label {
-  display: inline-flex;
-  font-family: var(--ak-font-sans);
-  line-height: 1;
-}
-
-/* 对应 .ak-button--block */
-.button--block {
-  display: block;
-  width: 100%;
-}
-
-/* 对应 .ak-button--fab */
-.button--fab {
-  display: inline-block;
-  width: 4rem;
-  height: 3.5rem;
-  background-color: rgba(128, 128, 128, 0.6);
-  box-shadow: 0 3px 8px var(--vp-c-shadow);
-  padding: 0;
-}
-
-/* 对应 .ak-button--fab:active */
-.button--fab:active {
-  background-color: rgba(128, 128, 128, 0.5);
-  box-shadow: 0 1px 3px var(--vp-c-shadow);
-}
-
-/* 对应 .ak-button--fab .ak-button__icon */
-.button--fab .button__icon {
-  width: 2.2rem;
-  height: 2.2rem;
-}
-
-/* 对应 .ak-button--outline */
-.button--outline {
-  border: 2px solid #fff;
-  font-family: var(--ak-font-sans);
-  box-shadow: 0 3px 8px var(--vp-c-shadow);
-}
-
-/* 对应 .ak-button--action */
-.button--action {
-  text-align: right;
-  background-color: var(--ak-primary);
-  box-shadow: 0 4px 12px var(--vp-c-shadow-brand);
-}
-
-/* 对应 .ak-button--advanced */
-.button--advanced {
-  background-color: rgba(255, 216, 2, 0.85);
-}
-
-/* 对应 .ak-button--light */
-.button--light {
-  background-color: rgba(238, 238, 238, 0.85);
-}
-
-/* 对应 .ak-button--card */
-.button--card {
-  position: relative;
-  background-color: #eee;
-  box-shadow: 0 3px 8px var(--vp-c-shadow);
-  width: 12.5rem;
-  height: 6rem;
-  color: #000;
-  margin: 0.3rem;
-}
-
-/* 对应 .ak-button--card .ak-icon */
-.button--card .ak-icon {
-  position: absolute;
-  right: 0.2rem;
-  width: 5rem;
-  height: 5rem;
-  color: #d3d3d3;
-}
-
-/* 对应 .ak-button--card .label */
-.button--card .label {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  font-family: var(--ak-font-serif);
-  font-size: 2.8rem;
-  font-weight: 900;
-}
-
-/* 对应 .ak-button--card .subtitle */
-.button--card .subtitle {
-  color: #999;
-  font-size: 21px;
-  position: absolute;
-  left: 14px;
-  top: 58px;
-}
-
-/* 对应 .ak-button--card.with-line::before */
-.button--card.with-line::before {
-  position: absolute;
-  content: "";
-  top: -2px;
-  width: 10rem;
-  height: 5px;
-  background-color: var(--ak-accent);
-}
-
-/* 对应 .ak-button--start */
-.button--start {
-  width: 38px;
-  height: 38px;
-  background-color: transparent;
-  border: 5px solid var(--ak-yellow);
-  color: var(--ak-yellow);
-  font-style: italic;
-  font-size: xx-small;
-  font-weight: 700;
-  margin: 10px;
-  transform: rotate(-45deg);
-  text-shadow: 0 0 20px var(--vp-c-shadow-warning);
-  box-shadow: 0 0 20px var(--vp-c-shadow-warning), inset 0 0 50px var(--vp-c-shadow-warning);
-  display: inline-block;
-  cursor: pointer;
-}
-
-/* 对应 .ak-button--start .icon */
-.button--start .icon {
-  color: var(--ak-yellow);
-  transform: rotate(45deg) translate(22px, -10px);
-}
-
-/* 对应 .ak-button--start .label */
-.button--start .label {
-  transform: rotate(45deg) translateY(5px);
-  text-align: center;
-}
-
-/* 对应 .ak-button--start::after（ak-radio 波纹，keyframes 双份） */
-.button--start::after {
-  content: "";
-  display: inline-block;
-  width: 38px;
-  height: 38px;
-  background-color: transparent;
-  border: 5px solid var(--ak-loading-color, var(--ak-yellow));
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  animation-name: fx-radio;
-  animation-duration: 0.7s;
-  animation-timing-function: ease-out;
-  animation-iteration-count: infinite;
-}
-
-@keyframes fx-radio {
-  from {
-    width: 38px;
-    height: 38px;
-    opacity: 1;
-  }
-
-  to {
-    width: 90px;
-    height: 90px;
-    opacity: 0;
-  }
-}
-
-/* ============================ ak-card → card ============================ */
-
-/* 对应 .ak-card */
-.card {
-  background-color: transparent !important;
-  border: none !important;
-  border-radius: 0 !important;
-  transition: 0.2s;
-  box-shadow: 0 2px 6px var(--vp-c-shadow) !important;
-  outline: 0;
-  display: inline-block;
-  padding: 0.5rem 1rem;
-}
-
-/* VitePress 特性卡片：顶部 4px 蓝条边缘。
- * 该卡片带六边形斜切 clip-path（见『明日方舟风格化增强』区），会裁掉 box-shadow，
- * 故此处不再声明阴影，静止为平面卡片、hover 辉光走 drop-shadow。 */
-.VPFeature {
-  background-color: transparent !important;
-  border: none !important;
-  border-radius: 0 !important;
-  transition: 0.2s;
-  outline: 0;
-  display: inline-block;
-  padding: 0.5rem 1rem;
-}
-
-/* 对应 .ak-card--outline */
-.card--outline {
-  display: block;
-  min-height: 100px;
-  border: 0.5rem solid #fff;
-  background-color: transparent;
-  box-shadow: 0 4px 12px var(--vp-c-shadow);
-}
-
-/* 对应 .ak-card--outline > .title */
-.card--outline>.title {
-  font-weight: 900;
-  font-size: large;
-  margin: 0.2rem 0;
-  border-bottom: 2px solid #fff;
-}
-
-/* 对应 .ak-card--outline:hover */
-.card--outline:hover {
-  box-shadow: 0 4px 12px var(--vp-c-shadow);
-}
-
-/* 对应 .ak-card--stripe */
-.card--stripe {
-  width: 200px;
-  height: 200px;
-  padding: 0;
-  background-image: repeating-linear-gradient(-45deg, transparent, transparent 5px, #fff 10px, #fff 15px);
-}
-
-/* 对应 .ak-card--stripe:hover */
-.card--stripe:hover {
-  box-shadow: 0 0 16px var(--vp-c-shadow);
-}
-
-/* 对应 .ak-card--place */
-.card--place {
-  border: 1px solid transparent;
-  width: 100px;
-  height: 100px;
-  box-shadow: inset 0 0 20px #fff;
-  border-bottom: 4px solid var(--ak-card-place-color, #fff);
-  padding: 0;
-}
-
-/* 对应 .ak-card--place:active/.ak-card--place:focus */
-.card--place:active,
-.card--place:focus {
-  border-top: 1px solid #fff;
-  border-left: 1px solid #fff;
-  border-right: 1px solid #fff;
-  box-shadow: inset 0 0 20px #fff, 0 2px 6px var(--vp-c-shadow);
-  transform: translateY(-10px);
-}
-
-/* ============================ ak-icon → icon ============================ */
-
-/* 对应 .ak-icon */
-.icon {
-  width: 1em;
-  height: 1em;
-  vertical-align: -0.15em;
-  fill: currentColor;
-  overflow: hidden;
-}
-
-/* 对应 .ak-icon--stuff */
-.icon--stuff {
-  box-sizing: border-box;
-  display: inline-flex;
-  border: 4px solid var(--icon-border-color, #d8dd5a);
-  border-radius: 50%;
-  padding: 0.2rem;
-  width: 5rem;
-  height: 5rem;
-  background-color: #d3d3d3;
-  box-shadow: inset 0 0 0 3px #000, 0 0 5px var(--icon-border-color, #d8dd5a);
-  justify-content: center;
-  align-items: center;
-}
-
-/* 对应 .ak-icon--stuff .ak-icon */
-.icon--stuff .ak-icon {
-  width: 5rem;
-  height: 5rem;
-  transform: scale(1.2);
-  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.6));
-}
-
-/* ============================ ak-fx-* → fx-* ============================ */
-
-/* 对应 .ak-fx--glow（keyframes 双份，改引用本地 fx-glow，辉光色取 --ak-fx-glow-color） */
-.fx--glow {
-  animation-name: fx-glow;
-  animation-duration: 0.75s;
-  animation-timing-function: ease-out;
-  animation-iteration-count: infinite;
-  animation-direction: alternate;
-}
-
-@keyframes fx-glow {
-  from {
-    box-shadow: 0 0 0 var(--ak-fx-glow-color, rgba(255, 255, 255, 0.3));
-  }
-
-  to {
-    box-shadow: 0 0 20px var(--ak-fx-glow-color, rgba(255, 255, 255, 0.3));
-  }
-}
-
-/* 对应 .ak-fx--outline（keyframes 双份） */
-.fx--outline {
-  animation-name: fx-outline-fade;
-  animation-duration: 0.7s;
-  animation-timing-function: ease-out;
-  animation-iteration-count: infinite;
-}
-
-@keyframes fx-outline-fade {
-  from {
-    outline: 0.35rem solid var(--ak-outline-color, gray);
-    outline-width: 0.35rem;
-  }
-
-  to {
-    outline: 0.35rem solid transparent;
-    outline-width: 0.2rem;
-    outline-offset: 1.5rem;
-  }
-}
-
-/* 对应 .ak-fx--skew-left */
-.fx--skew-left {
-  transform: skewX(-10deg);
-}
-
-/* 对应 .ak-fx--skew-right */
-.fx--skew-right {
-  transform: skewX(10deg);
-}
-
-/* ============================ 工具类 → 别名 ============================ */
-
-/* 对应 .text-shadow */
-.text-shadow {
-  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
-}
-
-/* 对应 .drop-shadow */
-.drop-shadow {
-  filter: drop-shadow(1px 1px 1px rgba(0, 0, 0, 0.3));
-}
-
-/* ============================ 其余含辉光组件 → 别名 ============================ */
-
-/* 对应 .ak-button__info */
-.button__info {
-  height: 30px;
-  background-color: rgba(0, 0, 0, 0.6);
-  color: #fff;
-  font-family: var(--ak-font-sans);
-  display: flex;
-  align-items: center;
-  font-size: 1.2rem;
-}
-
-/* 对应 .ak-button__info .ak-icon */
-.button__info .icon {
-  width: 3rem;
-  height: 3rem;
-  filter: drop-shadow(0 10px 15px #000);
-  margin-top: -0.5rem;
-}
-
-/* 对应 .ak-button-group */
-.button-group {
-  width: 300px;
-  display: flex;
-}
-
-/* 对应 .ak-button-group .ak-button */
-.button-group .button {
-  color: #000;
-  box-shadow: 0 2px 6px var(--vp-c-shadow);
-  font-family: var(--ak-font-sans);
-  font-size: x-large;
-}
-
-/* 对应 .ak-button-group--action */
-.button-group--action {
-  background-color: var(--button-group-bgcolor, rgba(74, 171, 234, 0.9));
-  padding: 0.2rem;
-}
-
-/* 对应 .ak-button-group--action .ak-icon */
-.button-group--action .icon {
-  margin: 0 0.2rem;
-  color: gray;
-}
-
-/* 对应 .ak-button-group--action .info */
-.button-group--action .info {
-  display: flex;
-  background-color: #444;
-  color: #fff;
-  height: 2rem;
-  font-size: 1.2rem;
-  align-items: center;
-}
-
-/* 对应 .ak-button-group--action .button-group */
-.button-group--action .button-group {
-  display: flex;
-}
-
-/* 对应 .ak-button-group--action .button-group .ak-icon */
-.button-group--action .button-group .icon {
-  position: absolute;
-  left: 0;
-  width: 3.5rem;
-  height: 3.5rem;
-  color: rgba(255, 255, 255, 0.2);
-}
-
-/* 对应 .ak-button-group--action .button-group .ak-button */
-.button-group--action .button-group .button {
-  display: inline-flex;
-  flex-grow: 1;
-  background-color: transparent;
-  box-shadow: inset 0 0 2px var(--vp-c-shadow-inset);
-  height: 4rem;
-  align-items: center;
-}
-
-/* 对应 .ak-button-group--action .button-group .ak-button__label */
-.button-group--action .button-group .button__label {
-  font-family: var(--ak-font-serif);
-  font-size: 1.8rem;
-  font-weight: 900;
-}
-
-/* 对应 .ak-button-group--total */
-.button-group--total {
-  display: flex;
-}
-
-/* 对应 .ak-button-group--total .left */
-.button-group--total .left {
-  flex-grow: 1;
-}
-
-/* 对应 .ak-button-group--total .left .ak-button */
-.button-group--total .left .button {
-  width: 100%;
-  height: 100%;
-  background-color: var(--button-group-bgcolor, rgba(74, 171, 234, 0.9));
-  box-shadow: none;
-}
-
-/* 对应 .ak-button-group--total .left .ak-button .ak-icon */
-.button-group--total .left .button .icon {
-  position: absolute;
-  right: 0;
-  width: 5rem;
-  height: 5rem;
-  color: rgba(255, 255, 255, 0.2);
-}
-
-/* 对应 .ak-button-group--total .left .ak-button__label */
-.button-group--total .left .button__label {
-  padding-top: 1.8rem;
-  font-family: var(--ak-font-serif);
-  font-size: 2.5rem;
-  font-weight: 900;
-}
-
-/* 对应 .ak-button-group--total .right */
-.button-group--total .right {
-  flex-grow: 1.6;
-  box-shadow: 0 2px 6px var(--vp-c-shadow);
-  z-index: 1;
-}
-
-/* 对应 .ak-counter（辉光在 __content 的 text-shadow 与 __prefix/__suffix 图标的 drop-shadow） */
-.counter {
-  display: inline-flex;
-  align-items: center;
-  color: #fff;
-  margin: 0 0.5rem;
-}
-
-/* 对应 .ak-counter__prefix .ak-icon */
-.counter__prefix .icon {
-  width: 2.8rem;
-  height: 2.8rem;
-  filter: drop-shadow(1px 1px 4px rgba(0, 0, 0, 0.6));
-}
-
-/* 对应 .ak-counter__content */
-.counter__content {
-  font-family: var(--ak-font-sans);
-  font-size: 1.8rem;
-  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.6);
-  margin-left: 0.4rem;
-  vertical-align: text-bottom;
-}
-
-/* 对应 .ak-counter__suffix .ak-icon */
-.counter__suffix .icon {
-  width: 2rem;
-  height: 2rem;
-  filter: drop-shadow(1px 1px 4px rgba(0, 0, 0, 0.6));
-  transition: 0.2s;
-}
-
-/* 对应 .ak-counter__suffix .ak-icon:active */
-.counter__suffix .icon:active {
-  color: rgba(255, 255, 255, 0.8);
-}
-
-/* 对应 .ak-level（阴影辉光） */
-.level {
-  position: relative;
-  display: inline-block;
-  width: 120px;
-  text-align: center;
-  font-family: var(--ak-font-sans);
-  box-shadow: 0 2px 6px var(--vp-c-shadow);
-}
-
-/* 对应 .ak-level .label */
-.level .label {
-  background-color: var(--level-label-bgcolor, #000);
-  width: 100%;
-}
-
-/* 对应 .ak-level .label::before */
-.level .label::before {
-  display: block;
-  content: var(--level-label-text, "OPERATION");
-  color: #fff;
-  font-size: small;
-  line-height: 0.6;
-  transform: scale(0.5);
-}
-
-/* 对应 .ak-level .content */
-.level .content {
-  background-color: #fff;
-  color: #000;
-  font-size: 1.2rem;
-  font-weight: 500;
-  padding: 0.2rem 0 0.3rem;
-}
-
-/* 对应 .ak-level .prefix-icon .ak-icon */
-.level .prefix-icon .icon {
-  position: absolute;
-  color: var(--level-prefix-icon-color, var(--ak-primary));
-  left: -1rem;
-  top: 0.2rem;
-  width: 2rem;
-  height: 2rem;
-  filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.3));
-}
-
-/* 对应 .ak-level .suffix-icon */
-.level .suffix-icon {
-  position: absolute;
-  top: -0.7rem;
-  right: -1.7rem;
-  width: 3.4rem;
-  height: 3.4rem;
-}
-
-/* 对应 .ak-media--album（相框阴影） */
-.media--album {
-  position: relative;
-  display: inline-block;
-  border: 0.5rem solid #fff;
-  box-shadow: 0 4px 12px var(--vp-c-shadow);
-  padding: 0;
-  margin: 10px;
-  transform-style: preserve-3d;
-  transform: rotate(2deg);
-  max-width: 100%;
-  max-height: 100%;
-}
-
-/* 对应 .ak-media--album img */
-.media--album img {
-  vertical-align: bottom;
-}
-
-/* 对应 .ak-media--album::before */
-.media--album::before {
-  content: "";
-  position: absolute;
-  top: 5px;
-  left: -10px;
-  width: 100%;
-  height: var(--ak-media-album-heiht, 98%);
-  border: 0.4rem solid #fff;
-  background-color: var(--ak-media-album-bgcolor, #333);
-  box-shadow: 0 4px 12px var(--vp-c-shadow);
-  transform: rotate(-5deg) translateZ(-1px);
-}
-
-/* 对应 .ak-pagination（阴影辉光） */
-.pagination {
-  display: inline-flex;
-  height: 5rem;
-  width: 16rem;
-  background-color: #999;
-  color: #fff;
-}
-
-/* 对应 .ak-pagination .next/.prev */
-.pagination .next,
-.pagination .prev {
-  position: relative;
-  background-color: #333;
-  height: 100%;
-  width: 4rem;
-  box-sizing: border-box;
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  box-shadow: 0 2px 6px var(--vp-c-shadow);
-  cursor: pointer;
-}
-
-/* 对应 .ak-pagination .next .ak-icon/.prev .ak-icon */
-.pagination .next .icon,
-.pagination .prev .icon {
-  width: 2rem;
-  height: 2rem;
-}
-
-/* 对应 .ak-pagination .next::after/.prev::after */
-.pagination .next::after,
-.pagination .prev::after {
-  position: absolute;
-  visibility: hidden;
-  content: "";
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: transparent;
-  transition: background-color 0.2s;
-}
-
-/* 对应 .ak-pagination .next:active/.prev:active */
-.pagination .next:active,
-.pagination .prev:active {
-  box-shadow: inset 0 0 8px var(--vp-c-shadow-inset), 0 2px 6px var(--vp-c-shadow);
-}
-
-/* 对应 .ak-pagination .next:active::after/.prev:active::after */
-.pagination .next:active::after,
-.pagination .prev:active::after {
-  content: "";
-  visibility: visible;
-  background-color: rgba(0, 0, 0, 0.1);
-}
-
-/* 对应 .ak-pagination .cur */
-.pagination .cur {
-  display: inline-flex;
-  border: 2px solid gray;
-  border-width: 2px 0;
-  width: 8rem;
-  flex-direction: column;
-  align-items: center;
-}
-
-/* 对应 .ak-pagination .cur .title */
-.pagination .cur .title {
-  font-weight: 400;
-  border: none;
-  margin-top: 9px;
-}
-
-/* 对应 .ak-pagination .label */
-.pagination .label {
-  font-size: 12px;
-}
-
-/* 对应 .ak-pagination .number */
-.pagination .number {
-  font-size: 1.9rem;
-}
-
-/* 对应 .ak-san（辉光在 .brain 图标 drop-shadow 与 .cur 文字阴影） */
-.san {
-  position: relative;
-  width: 11rem;
-}
-
-/* 对应 .ak-san .brain */
-.san .brain {
-  position: absolute;
-  left: 0.5rem;
-  top: 0;
-  z-index: 0;
-}
-
-/* 对应 .ak-san .brain .ak-icon */
-.san .brain .icon {
-  color: rgba(255, 255, 255, 0.9);
-  width: 7rem;
-  height: 7rem;
-  filter: drop-shadow(0 0 2px gray);
-}
-
-/* 对应 .ak-san .add */
-.san .add {
-  position: absolute;
-  left: -1rem;
-  top: 2rem;
-  border-radius: 50%;
-  width: 2rem;
-  height: 2rem;
-  background-color: rgba(0, 0, 0, 0.7);
-  box-shadow: 0 2px 6px var(--vp-c-shadow);
-  cursor: pointer;
-  z-index: 1;
-}
-
-/* 对应 .ak-san .add .ak-icon */
-.san .add .icon {
-  color: #fff;
-  width: 2rem;
-  height: 2rem;
-}
-
-/* 对应 .ak-san .cur */
-.san .cur {
-  background-color: rgba(128, 128, 128, 0.4);
-  text-align: right;
-  font-size: 5rem;
-  text-shadow: 4px 4px 0 gray;
-  padding: 0 1rem 0.8rem 0;
-  margin-bottom: 0.4rem;
-  border-radius: 0.1rem;
-}
-
-/* 对应 .ak-san .total */
-.san .total {
-  background-color: #333;
-  text-align: right;
-  color: #fff;
-  font-size: 1.6rem;
-  padding: 0.3rem 0.9rem 0.5rem 0;
-  border-radius: 0.2rem;
-}
-
-/* ============================ ak-font-* → font-* ============================ */
-
-/* 对应 .ak-font-serif */
-.font-serif {
-  font-family: var(--ak-font-serif);
-}
-
-/* 对应 .ak-font-sans-serif */
-.font-sans-serif {
-  font-family: var(--ak-font-sans);
-}
-
-/* ============================ ak-text--title → title ============================ */
-
-/* 对应 .ak-text--title */
-.title,
-.text-title {
-  font-weight: 900;
-  font-size: 3rem;
 }
 
 /**
@@ -1577,7 +776,7 @@ html .vpb-page-title {
   order: 1;
 }
 
-/* 规范：导航栏 40px 方形图标按钮（带描边样式）。
+/* 规范：导航栏方形图标按钮（44px，--ak-density-control-height 满足 44px 触控目标）。
  * GitHub 等 VitePress 内置按钮（2.x 类名为 .VPSocialLink）用 .VPNavBar .content-body 前缀压过其 scoped 样式。
  * 回到顶部按钮（.VPBackToTop）同属该规范，仅特殊化右下角悬浮定位与底色（见本区块末尾）。 */
 .vp-cookie-btn,
@@ -1586,10 +785,10 @@ html .vpb-page-title {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: var(--ak-density-control-height);
+  height: var(--ak-density-control-height);
   border: 1px solid var(--vp-c-border);
-  border-radius: 8px;
+  border-radius: var(--ak-radius-subtle);
   background-color: transparent;
   color: var(--vp-c-text-2);
   cursor: pointer;
@@ -1609,13 +808,15 @@ html .vpb-page-title {
   margin: 0 8px;
 }
 
-/* 图标尺寸统一 18px（cookie 与社交图标一致；社交图标为 iconify mask span，非 svg） */
+/* 图标尺寸统一 18px（cookie 与社交图标一致；社交图标为 iconify mask span，非 svg）。
+ * 图标采用 ak-icon 模块（.ak-icon），轮廓描边风格需压回 fill: none（CSS 优先于 presentation attribute） */
 .vp-cookie-btn__icon,
 .VPBackToTop__icon,
 .VPNavBar .content-body .VPSocialLink svg,
 .VPNavBar .content-body .VPSocialLink > [class^="vpi-social-"] {
   width: 18px;
   height: 18px;
+  fill: none;
 }
 
 /* 回到顶部按钮：继承上方公共规范，仅特殊化右下角悬浮定位与底色（悬浮于正文之上需底色防内容透出） */
@@ -1628,177 +829,335 @@ html .vpb-page-title {
 }
 
 /**
- * 明日方舟风格化增强
+ * ak-ui 0.2.1 组件品牌化覆盖（完全按新版 ak-ui 模块规范）
+ * 组件采用新版 @yunyoujun/ak-ui 0.2.1 模块（.ak-button/.ak-card/.ak-icon/.ak-tag/.ak-status 等）
+ * 的几何/表面/状态规范；品牌色（蓝 #4aabea / 黄 #ffd802 / 橙 #f6540e）经 --ak-color-* 与
+ * --ak-signal-* 语义 token 映射，明暗双主题由 --vp-c-* 承担。
+ * 覆盖目标：VitePress 默认组件（VPButton/VPFeature/vpb-card）无法加 .ak-* 类，故用本区块
+ * 按 ak-ui 模块的真实规范覆盖其样式（hover 提亮+浮起、active 压暗遮罩、矩形分层表面等）。
  * -------------------------------------------------------------------------- */
 
-/* ============================ A. 面板棱角化 ============================ */
+/* ============================ A. 表面分层与按钮/卡片契约 ============================ */
 
-/* 首页特性卡：六边形斜切角 + 四角 L 型角标（方舟材料卡风格）。
- * clip-path 会裁掉 box-shadow，故 hover 辉光改用 filter: drop-shadow。 */
-.VPFeature {
-  clip-path: polygon(0 0,
-      calc(100% - 16px) 0,
-      100% 16px,
-      100% 100%,
-      16px 100%,
-      0 calc(100% - 16px));
-}
-
-.VPFeature::after {
-  content: "";
-  position: absolute;
-  inset: 6px;
-  background:
-    linear-gradient(var(--ak-primary), var(--ak-primary)) left top / 10px 2px,
-    linear-gradient(var(--ak-primary), var(--ak-primary)) left top / 2px 10px,
-    linear-gradient(var(--ak-primary), var(--ak-primary)) right top / 10px 2px,
-    linear-gradient(var(--ak-primary), var(--ak-primary)) right top / 2px 10px,
-    linear-gradient(var(--ak-primary), var(--ak-primary)) left bottom / 10px 2px,
-    linear-gradient(var(--ak-primary), var(--ak-primary)) left bottom / 2px 10px,
-    linear-gradient(var(--ak-primary), var(--ak-primary)) right bottom / 10px 2px,
-    linear-gradient(var(--ak-primary), var(--ak-primary)) right bottom / 2px 10px;
-  background-repeat: no-repeat;
-  pointer-events: none;
-  opacity: 0.5;
-  transition: opacity 0.2s;
-}
-
-.VPFeature:hover {
-  filter: drop-shadow(0 0 22px var(--vp-c-shadow-brand-strong));
-}
-
-.VPFeature:hover::after {
-  opacity: 0.9;
-}
-
-/* 博客文章卡片（vpb-card）：同款斜切角 + hover 辉光（clip-path 裁掉其自带 box-shadow）。
- * 卡片自带 Tailwind 圆角类（rounded-[1.5rem]），与斜切角重叠，故直接归零圆角。 */
-.vpb-card {
+/* 首页按钮（VPButton）：对齐新版 ak-ui .ak-button（0.2.1）。
+ * 方块几何（border-radius:0）、50px 高、灰底基色、hover:not(:disabled) 提亮+浮起、
+ * active 内阴影 + 黑色遮罩（::after）。brand = 品牌蓝底（对应 .ak-button--action，
+ * 品牌映射 --ak-primary）；alt = 白描边透明（对应 .ak-button--outline）。 */
+.VPButton {
+  position: relative;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--ak-font-sans);
+  outline: 0;
+  border: none !important;
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  height: 50px !important;
+  width: 150px !important;
   border-radius: 0 !important;
-  clip-path: polygon(0 0,
-      calc(100% - 16px) 0,
-      100% 16px,
-      100% 100%,
-      16px 100%,
-      0 calc(100% - 16px));
+  color: #fff !important;
+  background-color: rgba(128, 128, 128, 0.95) !important;
+  box-shadow: inset 0 0 5px var(--vp-c-shadow-inset), 0 5px 10px var(--vp-c-shadow) !important;
+  transition: var(--ak-motion-base) var(--ak-ease-standard);
+  padding: 0 !important;
+  cursor: pointer;
 }
 
-.vpb-card:hover {
-  filter: drop-shadow(0 0 22px var(--vp-c-shadow-brand-strong));
-}
-
-/* ============================ B. 背景装饰 ============================ */
-
-/* 全屏方舟战术背景层：四角大六边形/菱形徽标 + 瞄准环 + 边缘刻度虚线 + 顶部警示条 + 终端编号文字。
- * 单一 SVG 覆盖全屏（preserveAspectRatio=slice），纯装饰，不挡交互。 */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1920 1080' preserveAspectRatio='xMidYMid slice'%3E%3Cg fill='none'%3E%3Cpath d='M1760 20 1900 90 1900 230 1760 300 1620 230 1620 90z' stroke='%234aabea' stroke-opacity='0.4' stroke-width='2'/%3E%3Ccircle cx='1760' cy='160' r='90' stroke='%234aabea' stroke-opacity='0.2' stroke-width='1'/%3E%3Ccircle cx='1760' cy='160' r='30' stroke='%234aabea' stroke-opacity='0.3' stroke-width='1.5'/%3E%3Ccircle cx='1760' cy='160' r='150' stroke='%234aabea' stroke-opacity='0.12' stroke-width='1' stroke-dasharray='4 8'/%3E%3Cpath d='M1760 40 1760 280 M1620 90 1900 230 M1900 90 1620 230' stroke='%234aabea' stroke-opacity='0.12' stroke-width='1'/%3E%3Cpath d='M120 60 260 130 260 260 120 330 -20 260 -20 130z' stroke='%234aabea' stroke-opacity='0.3' stroke-width='1.5'/%3E%3Ccircle cx='120' cy='195' r='60' stroke='%234aabea' stroke-opacity='0.18' stroke-width='1'/%3E%3Ccircle cx='120' cy='195' r='20' stroke='%234aabea' stroke-opacity='0.28' stroke-width='1.2'/%3E%3Cpath d='M180 780 420 960 180 1140 -60 960z' stroke='%234aabea' stroke-opacity='0.35' stroke-width='2'/%3E%3Ccircle cx='180' cy='960' r='90' stroke='%234aabea' stroke-opacity='0.2' stroke-width='1'/%3E%3Ccircle cx='180' cy='960' r='34' stroke='%234aabea' stroke-opacity='0.3' stroke-width='1.5'/%3E%3Ccircle cx='180' cy='960' r='150' stroke='%234aabea' stroke-opacity='0.12' stroke-width='1' stroke-dasharray='4 8'/%3E%3Cpath d='M180 780 180 1140 M-60 960 420 960' stroke='%234aabea' stroke-opacity='0.12' stroke-width='1'/%3E%3Cpath d='M1700 780 1840 850 1840 990 1700 1060 1560 990 1560 850z' stroke='%234aabea' stroke-opacity='0.35' stroke-width='2'/%3E%3Ccircle cx='1700' cy='920' r='70' stroke='%234aabea' stroke-opacity='0.2' stroke-width='1'/%3E%3Ccircle cx='1700' cy='920' r='24' stroke='%234aabea' stroke-opacity='0.3' stroke-width='1.2'/%3E%3Cpath d='M1000 520 1060 550 1060 610 1000 640 940 610 940 550z' stroke='%234aabea' stroke-opacity='0.2' stroke-width='1.2'/%3E%3Ccircle cx='1000' cy='580' r='14' stroke='%234aabea' stroke-opacity='0.25' stroke-width='1'/%3E%3Cpath d='M120 330 180 780 M-20 130 940 550 M1000 640 1560 850 M1620 230 1840 700' stroke='%234aabea' stroke-opacity='0.15' stroke-width='1' stroke-dasharray='6 8'/%3E%3C/g%3E%3Cg stroke='%234aabea' stroke-opacity='0.25' stroke-width='1.5'%3E%3Cline x1='60' y1='200' x2='60' y2='900' stroke-dasharray='10 18'/%3E%3Cline x1='30' y1='240' x2='90' y2='240'/%3E%3Cline x1='30' y1='420' x2='90' y2='420'/%3E%3Cline x1='30' y1='600' x2='90' y2='600'/%3E%3Cline x1='30' y1='780' x2='90' y2='780'/%3E%3Cline x1='1880' y1='200' x2='1880' y2='860' stroke-dasharray='10 18'/%3E%3Cline x1='1850' y1='300' x2='1910' y2='300'/%3E%3Cline x1='1850' y1='500' x2='1910' y2='500'/%3E%3Cline x1='1850' y1='700' x2='1910' y2='700'/%3E%3C/g%3E%3Cg stroke='%23ffd802' stroke-opacity='0.35' stroke-width='3'%3E%3Cpolyline points='1300,60 1400,60 1430,90 1430,30'/%3E%3Cpolyline points='1470,60 1570,60 1600,90 1600,30'/%3E%3Cpolyline points='1640,60 1740,60 1770,90 1770,30'/%3E%3Cpolyline points='1810,60 1910,60 1940,90 1940,30'/%3E%3C/g%3E%3Cg fill='%234aabea'%3E%3Ctext x='1620' y='360' font-family='sans-serif' font-size='30' letter-spacing='10' fill-opacity='0.35'%3ELAYOSERVE%3C/text%3E%3Ctext x='-20' y='400' font-family='sans-serif' font-size='22' letter-spacing='8' fill-opacity='0.3'%3ERAINCRAT-01%3C/text%3E%3Ctext x='1560' y='1110' font-family='sans-serif' font-size='22' letter-spacing='8' fill-opacity='0.3'%3ERAINCRAT-01%3C/text%3E%3C/g%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: center;
-  opacity: 0.6;
-  pointer-events: none;
-  z-index: 1;
-}
-
-/* 全屏细扫描线纹理（CRT 屏幕质感，极淡，不挡交互） */
-body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.028) 0 1px, transparent 1px 3px);
-}
-
-.dark body::after {
-  background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.022) 0 1px, transparent 1px 3px);
-}
-
-/* 导航栏底部黄黑警示斜纹分隔条（方舟危险区标识，向右流动）。
- * -45deg 条纹的水平重复周期 = 16px / cos(45°) ≈ 22.63px，按该位移循环即可无缝衔接。
- * background-size 锁定为 22.63px × 100%：让背景图宽度恰好等于一个水平周期，
- * 避免 background-repeat 平铺时在元素左右端产生竖向接缝（周期不整除元素宽度所致）。
- * z-index: -1 使其沉到导航内容最底层（仍在导航栏背景之上），下拉菜单/弹出浮窗不会被其覆盖。 */
-.VPNavBar::after {
-  content: "";
+.VPButton::after {
   position: absolute;
+  visibility: hidden;
+  content: "";
+  top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: -1;
-  height: 3px;
-  background: repeating-linear-gradient(-45deg, var(--ak-low) 0 8px, #000 8px 16px);
-  background-size: 22.63px 100%;
-  opacity: 0.4;
-  pointer-events: none;
-  animation: ak-hazard-scroll 0.9s linear infinite;
+  background-color: transparent;
+  transition: background-color var(--ak-motion-base);
 }
 
-@keyframes ak-hazard-scroll {
-  from {
-    background-position: 0 0;
-  }
-
-  to {
-    background-position: 22.63px 0;
-  }
+.VPButton:hover:not(:disabled) {
+  filter: brightness(1.08);
+  transform: translateY(-2px);
 }
 
-/* 导航站名后缀：ARKNS 终端编号风格 */
-.VPNavBarTitle .title::after {
-  content: " // RAINCRAT";
+.VPButton:active {
+  box-shadow: inset 0 0 10px var(--vp-c-shadow-inset), 0 6px 12px var(--vp-c-shadow) !important;
+}
+
+.VPButton:active::after {
+  content: "";
+  visibility: visible;
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.VPButton.brand {
+  text-align: right;
+  background-color: var(--ak-primary) !important;
+  box-shadow: 0 4px 12px var(--vp-c-shadow-brand) !important;
+}
+
+.VPButton.brand:hover:not(:disabled),
+.VPButton.brand:active {
+  background-color: var(--ak-primary) !important;
+}
+
+.VPButton.alt {
+  border: 2px solid #fff !important;
   font-family: var(--ak-font-sans);
-  font-size: 0.62em;
-  font-weight: 600;
-  letter-spacing: 0.18em;
-  color: var(--ak-advanced);
-  opacity: 0.85;
-  margin-left: 0.35em;
+  box-shadow: 0 4px 12px var(--vp-c-shadow) !important;
+}
+
+.VPButton.alt:hover:not(:disabled),
+.VPButton.alt:active {
+  border-color: #fff !important;
+}
+
+/* 首页特性卡（VPFeature）：矩形分层表面（对齐 .ak-card 的透明底 + 阴影分层）。
+ * 无斜切/角标/辉光；hover 品牌淡底 + 轻浮起（特性卡无边框，用 fill 变化而非描边）。
+ * VitePress 默认给 .VPFeature 12px 圆角，归零为直角。 */
+.VPFeature {
+  border-radius: 0 !important;
+  transition: transform var(--ak-motion-base) var(--ak-ease-standard),
+    background-color var(--ak-motion-base) var(--ak-ease-standard);
+}
+
+.VPFeature:hover {
+  background-color: var(--vp-c-brand-soft) !important;
+  transform: translateY(-2px);
+}
+
+/* 首页特性卡标题：VitePress 默认 16px/600 sans → ak 命令字面（衬线粗黑），与全站标题统一；
+ * 卡片内距 24px → 28px 增加呼吸感（scoped 样式需 !important） */
+.VPFeature .box {
+  padding: 28px !important;
+}
+
+.VPFeature .title {
+  font-family: var(--ak-font-command) !important;
+  font-weight: 900 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.4 !important;
+}
+
+.VPFeature .details {
+  line-height: 1.7 !important;
+}
+
+/* 博客文章卡片（vpb-card）：矩形直角表面（对齐 .ak-card）。
+ * 卡片自带 Tailwind 圆角类（rounded-[1.5rem]），归零为直角；hover 品牌描边 + 轻浮起。 */
+.vpb-card {
+  border-radius: 0 !important;
+  transition: border-color var(--ak-motion-base) var(--ak-ease-standard),
+    transform var(--ak-motion-base) var(--ak-ease-standard);
+}
+
+.vpb-card:hover {
+  border-color: var(--vp-c-brand-2) !important;
+  transform: translateY(-2px);
+}
+
+/* ---- VPB 博客组件残留默认样式 ak 化 ----
+ * vpb 主题样式表加载顺序靠后（约定 15），其默认圆角（Tailwind rounded-* 工具类）、
+ * 代码块/行内代码圆角与 :root 的 --vp-c-brand 绿色系变量会压过本文件顶部品牌映射，
+ * 这里统一用 html 前缀 + !important 拉回 ak-ui 直角几何与品牌蓝。 */
+
+/* 圆角归零：页面容器/软面板/结果面板/静态卡片/胶囊/计数徽标 → 直角方块 */
+html .vpb-page,
+html .vpb-soft-panel,
+html .vpb-results-panel,
+html .vpb-card--static,
+html .vpb-pill,
+html .vpb-chip,
+html .vpb-chip-icon,
+html .vpb-chip-count {
+  border-radius: 0 !important;
+}
+
+/* 作者头像：vpb 默认圆形 → 直角（ak-ui 几何无圆形元素） */
+html .vpb-card img,
+html .vpb-soft-panel img {
+  border-radius: 0 !important;
+}
+
+/* 代码块/行内代码：vpb 默认 1.25rem/0.7rem 大圆角 → 回到"组件细节"区块设定 */
+html .vp-doc div[class*='language-'] {
+  border-radius: var(--ak-radius-subtle) !important;
+}
+
+html .vp-doc :not(pre) > code {
+  border-radius: 0 !important;
+}
+
+/* 品牌色：vpb :root 的 --vp-c-brand 绿色系覆盖了顶部映射，逐组件拉回 ak 品牌蓝 */
+html .vpb-kicker,
+html .vpb-divider-title,
+html .vpb-accent-link,
+html .vpb-accent-link:hover,
+html .vpb-link:hover,
+html .vpb-list-link:hover {
+  color: var(--vp-c-brand-1) !important;
+}
+
+/* vpb-kicker 两侧短线：vpb 默认绿 → ak 蓝 */
+html .vpb-kicker::before,
+html .vpb-kicker::after {
+  background: color-mix(in srgb, var(--ak-primary) 45%, transparent) !important;
+}
+
+/* 分类/标签胶囊（vpb-pill）：直角 + 品牌蓝字/描边/淡底（对齐 .ak-tag 色系） */
+html .vpb-pill {
+  color: var(--vp-c-brand-1) !important;
+  border-color: color-mix(in srgb, var(--ak-primary) 55%, transparent) !important;
+  background-color: var(--ak-info-tint) !important;
+}
+
+/* 标签 chip 悬停/激活态：vpb 默认绿 → 品牌蓝 */
+html .vpb-chip:hover,
+html .vpb-chip.is-active,
+html .dark .vpb-chip:hover,
+html .dark .vpb-chip.is-active {
+  color: var(--vp-c-brand-1) !important;
+}
+
+/* chip 激活图标徽标：vpb 默认绿底 → ak 蓝淡底 */
+html .vpb-chip.is-active .vpb-chip-icon {
+  color: var(--vp-c-brand-1) !important;
+  border-color: color-mix(in srgb, var(--ak-primary) 22%, transparent) !important;
+  background-color: color-mix(in srgb, var(--ak-primary) 14%, transparent) !important;
+}
+
+html .vpb-chip.is-active .vpb-chip-count {
+  background-color: color-mix(in srgb, var(--ak-primary) 20%, transparent) !important;
+}
+
+/* vpb :root 的 --vp-button-brand-* 与 --vp-custom-block-tip-* 绿色系同样加载靠后，
+ * 用 html:root（特异性高于 :root）重声明为 ak 品牌映射（与顶部"变量映射"区块一致） */
+html:root {
+  --vp-button-brand-border: var(--vp-c-brand-2);
+  --vp-button-brand-text: var(--vp-c-white);
+  --vp-button-brand-bg: var(--vp-c-brand-1);
+  --vp-button-brand-hover-border: var(--vp-c-brand-3);
+  --vp-button-brand-hover-text: var(--vp-c-white);
+  --vp-button-brand-hover-bg: var(--vp-c-brand-2);
+  --vp-button-brand-active-border: var(--vp-c-brand-2);
+  --vp-button-brand-active-text: var(--vp-c-white);
+  --vp-button-brand-active-bg: var(--vp-c-brand-3);
+
+  --vp-custom-block-tip-border: var(--ak-signal-info);
+  --vp-custom-block-tip-text: var(--vp-c-brand-1);
+  --vp-custom-block-tip-bg: var(--vp-c-brand-soft);
+}
+
+/* vpb 默认排版字体（Neue Haas / Iowan）→ ak-ui 规范：
+ * 元信息/标签小字走等宽终端字面，结果大标题走命令字面 */
+html .vpb-kicker,
+html .vpb-divider-title,
+html .vpb-list-link__meta,
+html .vpb-results-kicker,
+html .vpb-results-stat {
+  font-family: var(--ak-font-mono, monospace) !important;
+}
+
+html .vpb-results-title {
+  font-family: var(--ak-font-command) !important;
+}
+
+/* 文章卡片标题：vpb 默认 Iowan 衬线 600 → ak 命令字面（衬线粗黑 900） */
+html .vpb-card h2 a.vpb-link {
+  font-family: var(--ak-font-command) !important;
+  font-weight: 900 !important;
+}
+
+/* 文章卡片标题行距：vpb leading-[1.06] 过挤，中文多行标题提至 1.32；字距 -0.045em → -0.01em。
+ * 宽度限制放宽：vpb 默认 max-w-[18ch] 太窄致中文标题频繁断行，提至 28ch（配合行高呼吸感更从容）；
+ * 标题→摘要间距 mb-4(1rem) → 1.15rem，缓解多行标题与摘录的拥挤 */
+html .vpb-card h2 {
+  max-width: 28ch !important;
+  margin-bottom: 1.15rem !important;
+  line-height: 1.32 !important;
+  letter-spacing: -0.01em !important;
+}
+
+/* 卡片顶部白色高光：vpb 45% 白渐变在暗色下成"顶部白雾"，亮色也过强 → 收敛为微妙光泽 */
+html .vpb-card::before {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), transparent 32%) !important;
+}
+
+html .dark .vpb-card::before {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 32%) !important;
+}
+
+/* 标签页结果面板：vpb 字面米白/暗绿渐变 → ak 分层表面（bg-soft + 收敛阴影） */
+html .vpb-results-panel {
+  background: var(--vpb-bg-soft) !important;
+  box-shadow: var(--vpb-panel-shadow) !important;
+}
+
+html .vpb-results-panel::before {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), transparent 22%) !important;
+}
+
+/* 竖屏（<xl）文章页作者块弱化：vpb 默认 48px 头像 + text-xl 名字 + px-4 py-4 面板 + pb-10 留白，
+ * 在手机竖屏过于喧宾夺主 → 缩小头像/字号/留白，弱化为紧凑的署名行。
+ * 注意：作者块不在 .vp-doc 内（位于 .content-container / .VPDocAside 下），选择器用 html dl.pb-10 兜底 */
+@media (max-width: 1279.98px) {
+  html dl.pb-10 {
+    padding: 0.6rem 0 1.5rem !important;
+  }
+
+  html dl.pb-10 li.vpb-soft-panel {
+    padding: 0.4rem 0.75rem !important;
+    gap: 0.6rem !important;
+  }
+
+  html dl.pb-10 img {
+    width: 2rem !important;
+    height: 2rem !important;
+  }
+
+  html dl.pb-10 dd a.text-xl {
+    font-size: 0.95rem !important;
+    line-height: 1.3 !important;
+  }
+}
+
+/* ---- 真实 .ak-* 模块类的品牌字面量覆盖 ----
+ * 站内自有的标记（如导航图标 .ak-icon）直接使用 @yunyoujun/ak-ui/style.css 提供的真实 .ak-* 类；
+ * 绝大多数模块已通过 --ak-color-* / --ak-signal-* token 自动吃品牌色，仅官方编译产物里写死的
+ * 字面量需要在此对齐品牌：.ak-button--action 官方为 #2bf（ak $blue），.ak-button--advanced
+ * 官方为 rgba(255,216,2,.85)，统一覆盖为品牌主蓝/动作黄。 */
+
+/* .ak-button--action：#2bf → 品牌主蓝（同上方 .VPButton.brand 映射） */
+.ak-button--action {
+  background-color: var(--ak-primary);
+  box-shadow: 0 4px 12px var(--vp-c-shadow-brand);
+}
+
+/* .ak-button--advanced：官方半透明黄 → 品牌动作黄（黄底配黑字保证对比度） */
+.ak-button--advanced {
+  background-color: var(--ak-signal-action);
+  color: #000;
+}
+
+/* ============================ B. 背景装饰 ============================ */
+/* 原全屏战术背景层（SVG 六边形徽标/瞄准环/刻度线）、全屏扫描线、导航警示斜纹、
+ * 站名终端后缀等装饰已按 ak-ui 规范移除（surface 分层由"全站背景"区块的 html body 承担）。 */
+
+/* 导航站名：干净品牌文字（无终端编号后缀） */
+.VPNavBarTitle .title::after {
+  display: none;
 }
 
 /* ============================ C. 交互动效 ============================ */
-
-/* 按钮光带扫过（方舟按钮 hover：斜向亮带从左扫到右） */
-.VPButton {
-  overflow: hidden;
-}
-
-.VPButton::before {
-  content: "";
-  position: absolute;
-  top: -12%;
-  bottom: -12%;
-  left: -45%;
-  width: 35%;
-  background: linear-gradient(105deg, transparent, rgba(255, 255, 255, 0.5), transparent);
-  transform: skewX(-22deg);
-  transition: left 0.55s ease;
-  pointer-events: none;
-}
-
-.VPButton:hover::before {
-  left: 115%;
-}
-
-/* 特性卡顶部蓝条：hover 时横向展开（材料合成动画感） */
-.VPFeature::before {
-  transition: width 0.25s ease;
-}
-
-.VPFeature:hover::before {
-  width: 100%;
-}
+/* 原按钮光带扫过、特性卡顶条展开动效已移除（光带辉光收敛为局部反馈，见 D 区块）。 */
 
 /* ============================ D. 焦点状态差异化（全 primary 色系） ============================ */
 
-/* 全局键盘焦点环：primary 描边（替代浏览器默认蓝） */
+/* 全局键盘焦点环：ak 焦点 token（替代浏览器默认蓝） */
 :focus-visible {
-  outline: 2px solid var(--ak-primary);
-  outline-offset: 2px;
+  outline: var(--ak-focus-width) solid var(--ak-focus-color);
+  outline-offset: var(--ak-focus-offset);
 }
 
 /* 文档内链接 hover：primary 变色 + 下划线加深 */
@@ -1853,18 +1212,18 @@ body::after {
 /* ============================ F. 导航折叠"更多"菜单 ============================ */
 
 /* 更多按钮（768–1280px 宽度下导航项折叠触发）：与 Cookie 按钮同款方钮。
- * 注意：ak-ui 替换规则 `.button, .VPButton` 带 !important 会把导航栏按钮染成 150×50 灰块，
+ * 注意：VitePress 内置按钮类 `.button` 会被 ak-ui 风格（见上方 A 区块 .VPButton 契约）放大成 150×50 灰块，
  * 故此处必须用更高特异性（.VPNavBar .VPNavBarExtra .button）+ !important 压过。 */
 .VPNavBar .VPNavBarExtra .button {
   display: inline-flex !important;
   align-items: center;
   justify-content: center;
-  width: 40px !important;
-  height: 40px !important;
+  width: var(--ak-density-control-height) !important;
+  height: var(--ak-density-control-height) !important;
   margin: 0 8px !important;
   padding: 0 !important;
   border: 1px solid var(--vp-c-border) !important;
-  border-radius: 8px !important;
+  border-radius: var(--ak-radius-subtle) !important;
   background-color: transparent !important;
   color: var(--vp-c-text-2) !important;
   box-shadow: none !important;
@@ -1949,11 +1308,11 @@ body::after {
 
 /* 顶栏背景：accent 透明红（桌面端 VPNavBar 本身透明，由 content-body 承载底色） */
 .is-404-page .VPNavBar:not(.home) {
-  background-color: rgba(246, 84, 14, 0.1) !important;
+  background-color: var(--ak-accent-soft) !important;
 }
 
 .is-404-page .VPNavBar .content-body {
-  background-color: rgba(246, 84, 14, 0.1) !important;
+  background-color: var(--ak-accent-soft) !important;
 }
 
 /* 顶栏底部动态警戒线：黄黑 → 红黑，加宽为唯一主警戒线（危险区标识）。
@@ -1973,11 +1332,11 @@ body::after {
 
 @keyframes ak-nav-glow-danger {
   from {
-    filter: drop-shadow(0 0 2px rgba(246, 84, 14, 0.35));
+    filter: drop-shadow(0 0 2px rgba(246, 84, 14, 0.3));
   }
 
   to {
-    filter: drop-shadow(0 0 10px rgba(246, 84, 14, 0.8));
+    filter: drop-shadow(0 0 6px rgba(246, 84, 14, 0.55));
   }
 }
 
@@ -2054,8 +1413,10 @@ body::after {
   --el-table-tr-bg-color: transparent;
 }
 
-/* 表头：深色底 + 底部 2px ak 蓝主分隔线 + 字距 */
-.is-tickets-page .el-table th.el-table__cell {
+/* 表头：深色底 + 底部 2px ak 蓝主分隔线 + 字距。
+ * 选择器需带 .is-leaf：EP 的 .el-table th.el-table__cell.is-leaf（异步 chunk，后加载）与
+ * 旧选择器同特异性，会把 border-bottom 覆盖回 1px 灰线。 */
+.is-tickets-page .el-table th.el-table__cell.is-leaf {
   border-bottom: 2px solid var(--ak-primary);
   font-size: 13px;
   font-weight: 600;
@@ -2063,15 +1424,15 @@ body::after {
   color: var(--vp-c-text-2);
 }
 
-/* 斑马纹：极淡蓝色扫描线（透明度 0.04，CRT 质感，克制） */
+/* 斑马纹：极淡蓝色扫描线（--ak-info-faint，CRT 质感，克制） */
 .is-tickets-page .el-table .el-table__body tr.el-table__row--striped > td.el-table__cell {
-  background: repeating-linear-gradient(180deg, transparent 0 3px, rgba(74, 171, 234, 0.04) 3px 4px);
+  background: repeating-linear-gradient(180deg, transparent 0 3px, var(--ak-info-faint) 3px 4px);
 }
 
 /* hover 行：淡蓝底 + 左侧 2px ak 蓝竖线（box-shadow inset，不改变盒尺寸） */
 .is-tickets-page .el-table .el-table__body tr.el-table__row:hover > td.el-table__cell {
-  background: rgba(74, 171, 234, 0.08) !important;
-  box-shadow: inset 2px 0 0 var(--ak-primary);
+  background: var(--ak-info-tint) !important;
+  box-shadow: inset 2px 0 0 var(--ak-signal-info);
 }
 
 /* 工单号（首列）：等宽终端字体 + ak 蓝 */
@@ -2081,18 +1442,34 @@ body::after {
   color: var(--ak-primary);
 }
 
-/* ---- G3. 标签：状态实心斜切角 / 优先级渠道描边直角 ---- */
+/* ---- G3. 标签：对齐新版 .ak-tag 几何（左上信号条 + 右上斜切角） ---- */
 .is-tickets-page .el-tag {
+  position: relative;
+  overflow: hidden;
   border-radius: 0;
+  padding-left: 1.1rem; /* 为左侧信号条留位 */
   font-family: var(--ak-font-sans);
   letter-spacing: 0.04em;
 }
 
-/* 实心标签：右侧斜切角（呼应全站斜切角语言）。
+/* 左上信号条（对应 .ak-tag::before，颜色取 currentColor 自适应）：
+ * 实心黄（黑字）→ 黑条、实心蓝/绿/橙/灰（白字）→ 白条、描边（plain）→ 类型色条 */
+.is-tickets-page .el-tag::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 0.3rem;
+  content: "";
+  background: currentColor;
+  opacity: 0.92;
+}
+
+/* 实心标签：右上 45° 斜切角（与官方 .ak-tag 的 clip-path 一致）。
  * 描边（plain）标签不用 clip-path，否则右侧描边会被斜切裁掉一段。 */
 .is-tickets-page .el-tag:not(.el-tag--plain) {
-  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 50%, calc(100% - 8px) 100%, 0 100%);
-  padding-right: 12px;
+  clip-path: polygon(0 0, calc(100% - 0.55rem) 0, 100% 0.55rem, 100% 100%, 0 100%);
+  padding-right: 0.9rem;
 }
 
 /* 实心（状态）：黄黑警戒 / ak 蓝 / 完成绿 / 关闭灰 */
@@ -2182,7 +1559,7 @@ body::after {
 .is-tickets-page .el-select__wrapper.is-focused {
   box-shadow:
     0 0 0 1px var(--ak-primary) inset,
-    0 0 0 4px rgba(74, 171, 234, 0.12);
+    0 0 0 4px var(--ak-info-tint);
 }
 
 /* ---- G6. 分页：直角描边方块 + active ak 蓝实心 ---- */
@@ -2255,7 +1632,7 @@ body::after {
   font-family: var(--ak-font-sans);
 }
 
-/* 顶部黄黑警示条纹（与导航分隔条同款流动） */
+/* 顶部黄黑警示条纹（加载遮罩保留特色：流动警示条） */
 .page-loader::after {
   content: "";
   position: fixed;
@@ -2271,7 +1648,17 @@ body::after {
   pointer-events: none;
 }
 
-/* 居中大百分比：用无衬线字体栈（Rajdhani → 系统 sans），避免 Google Fonts 未就绪时
+@keyframes ak-hazard-scroll {
+  from {
+    background-position: 0 0;
+  }
+
+  to {
+    background-position: 22.63px 0;
+  }
+}
+
+/* 居中大百分比：用无衬线字体栈（Rajdhani → 系统 sans），避免字体加载完成前
  * 回退到 --ak-font-serif 的中文衬线数字（宋体风格），数字保持 tabular-nums 等宽 */
 .page-loader__pct {
   font-family: var(--ak-font-sans);

@@ -29,25 +29,6 @@ export default defineConfig({
   lang: siteLang,
   cleanUrls: true,
   head: [
-    // 字体预连接：提前建连 Google Fonts 域名，缩短字体文件下载延迟（样式表已改非阻塞加载）
-    ['link', { rel: 'preconnect', href: 'https://fonts.googleapis.com' }],
-    ['link', { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' }],
-    // Google Fonts 样式表非阻塞加载：先以 print 媒体加载，就绪后切回 all（display=swap 先回退后换入），
-    // 不再阻塞首屏渲染；ak-ui 样式已由 theme/index.js 打包引入（npm 包），不再经 CDN 重复加载（原 CDN 链接已 404）
-    [
-      'link',
-      {
-        rel: 'stylesheet',
-        media: 'print',
-        href: 'https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@100..900&family=Noto+Serif+SC:wght@100..900&display=swap',
-        onload: "this.media='all'"
-      }
-    ],
-    [
-      'noscript',
-      {},
-      '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@100..900&family=Noto+Serif+SC:wght@100..900&display=swap">'
-    ],
     // 全站静态 SEO meta（值统一取自 seo-config.js）
     ['meta', { name: 'robots', content: seo.robotsContent }],
     ['meta', { name: 'author', content: seo.author }],
@@ -91,6 +72,22 @@ export default defineConfig({
       },
     }
     : {}),
+
+  // 首屏性能：VitePress 会把全部 CSS 合并进唯一全局 style.css（数百 KB），并以
+  // render-blocking 的 `<link rel="preload stylesheet" as="style">` 注入 head——
+  // 浏览器在 CSS 下载完成前阻塞一切绘制，head 内联加载遮罩（loader.js，关键样式内联）
+  // 也显示不出来，造成"白屏等几秒才开始走进度条"。此处把该链接改为非阻塞预取：
+  // preload 尽早并行下载 CSS，首帧立即绘制遮罩/进度条，CSS 就绪后经 onload 转 stylesheet
+  // 应用（noscript 兜底）。loader.js 的 trackStyles 同步跟踪 `link[rel="preload"][as="style"]`，
+  // 保证遮罩在 CSS 应用前不淡出（无 FOUC）。
+  transformHtml(html) {
+    return html.replace(
+      /<link\b([^>]*?)\brel="preload stylesheet"([^>]*?)\/?>/g,
+      (match, pre, post) =>
+        `<link${pre}rel="preload"${post} onload="this.onload=null;this.rel='stylesheet'">` +
+        `<noscript><link${pre}rel="stylesheet"${post}></noscript>`
+    );
+  },
 
   // 每页动态注入 canonical / OG / Twitter / JSON-LD（URL 均由 siteUrl 派生）
   transformHead(ctx) {

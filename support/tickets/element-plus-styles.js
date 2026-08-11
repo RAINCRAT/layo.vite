@@ -2,8 +2,8 @@
  * Element Plus 按需样式入口（工单系统专用）
  *
  * 仅引入工单列表/详情页实际使用的组件样式及其依赖，替换全量 element-plus/dist/index.css（约 580KB）。
- * 由于 VitePress 会把所有 CSS 合并进唯一的全局 style.css，此项改动直接缩减全站（含非工单页）
- * 首屏渲染阻塞的样式体积。
+ * 由于 VitePress 会把所有 CSS 合并进唯一的全局 style.css（约定：不改动 cssCodeSplit），
+ * 此项改动直接缩减全站（含非工单页）首屏下载的样式体积。
  *
  * 说明：直接引入 theme-chalk 的 .css 文件（而非 element-plus 的 es 组件 style 目录下
  * 的 css 入口 .mjs），后者内部的 .css 导入在 VitePress SSR（页面渲染阶段）会因
