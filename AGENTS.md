@@ -20,6 +20,25 @@
 ## 项目结构
 
 ```
+.vitepress/
+  config.js        # 站点配置（唯一生效的配置入口；head 注入的加载看门狗脚本：主 JS 未启动时 8s 后给遮罩加"刷新重试"兜底，应用水合后由 LoadingOverlay 调 __LAYO_BOOTED__() 解除）
+  seo.js           # SEO/GEO 工具模块：URL 派生、页面 head 注入、robots/llms 生成
+  seo-config.js    # SEO 独立配置：所有 SEO 变量集中于此，默认沿用 config.js 的值
+  theme/
+    index.js       # 主题入口（唯一生效的入口，extends DefaultTheme，注册 VPB 组件，enhanceApp 初始化 Cookie 同意）
+    Layout.vue     # 组合布局：博客文章/作者页插槽（VPB）+ 导航栏 Cookie 按钮（nav-bar-content-after）+ 全站回到顶部（layout-bottom）+ 工单页 is-tickets-page 标记（加宽内容区）+ 全站加载遮罩（LoadingOverlay）
+    style.css      # 全局样式与 ak-ui 组件替换（保留双份规则）
+    cookie-consent.js # 第三方 Cookie 同意管理器（vanilla-cookieconsent）+ Clarity 同意同步
+    CookieConsentButton.vue # 导航栏右上角手动弹出 Cookie 偏好设置的按钮（Layout.vue 的 nav-bar-content-after 插槽引入）
+    BackToTop.vue  # 全站右下角回到顶部按钮（VPBackToTop 类，基础样式见 style.css）
+    LoadingOverlay.vue # 页面加载遮罩 + 路由顶部进度条：首次连接全屏遮罩（大百分比 + 横跨屏幕贴底进度条），进度由真实异步节点驱动（文档就绪/水合/样式/字体/全部资源，各占权重，失败或断网切换"刷新重试"错误态）；路由切换显示顶部细进度条；遮罩结束给 <html> 加 is-loaded 触发内容分步入场。基础样式见 style.css 区块 G
+index.md           # 首页（hero + features）
+blogs/             # 博客站：index.md（VPBHome 文章列表）+ posts/（文章）+ authors/（作者）+ archives.md（VPBArchives）+ tags.md（VPBTags）
+docs/              # 文档页
+support/tickets/   # 工单追踪（列表页：index.md + Ticket.vue + tickets.data.js 遍历加载器；详情页头部：TicketHeader.vue，均基于 Element Plus 构建）
+assets/tickets/    # 工单数据源：每个工单一个 .md（frontmatter 含 id/title/status/priority/reporter/channel/createdAt + updates 更新记录，正文即工单详情页；更新时间自动取 updates 最新一条，不手填 updatedAt）。example.md 为参数注释模板，加载器已排除，不计入工单列表
+.env               # 站点配置唯一来源：VITE_SITE_*（站点基础）+ VITE_SEO_*（SEO 独立覆盖）
+package.json
 layo.vite/                       # 仓库根（git 追踪文件全集，构建产物/缓存除外）
 ├── .env                         # 站点配置唯一来源：VITE_SITE_*（站点基础）+ VITE_SEO_*（SEO 独立覆盖）
 ├── .gitignore

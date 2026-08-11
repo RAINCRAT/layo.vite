@@ -62,6 +62,13 @@ export default defineConfig({
 
       // LAYOSERVE 泠域存储
       `(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window, document, "clarity", "script", "xw58fwyen0");`
+    ],
+    [
+      'script',
+      {},
+      // 加载看门狗兜底：若主 JS 包加载失败/水合未发生（遮罩会永远卡住），8s 后注入"刷新重试"入口。
+      // 应用水合完成后由 LoadingOverlay 调用 __LAYO_BOOTED__() 解除。
+      `(function(){var armed=true;window.__LAYO_BOOTED__=function(){armed=false;};setTimeout(function(){if(!armed)return;var d=document.createElement('div');d.id='loader-watchdog';d.setAttribute('style','position:fixed;inset:0;z-index:9999999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:var(--vp-c-bg,#f7f9fc);color:var(--vp-c-text-1,#1e2430);font-family:var(--ak-font-sans,sans-serif);text-align:center');d.innerHTML='<p style="margin:0;font-size:22px;font-weight:700;letter-spacing:0.18em;color:#f6540e">加载失败</p><p style="margin:0;font-size:13px;letter-spacing:0.12em;color:#8b94a6">资源加载超时或无响应，请检查网络后重试</p><button id="loader-watchdog-btn" style="margin-top:6px;padding:8px 28px;border:1px solid #f6540e;color:#f6540e;background:transparent;cursor:pointer;font-family:inherit;font-size:14px;letter-spacing:0.18em">刷新重试</button>';document.body.appendChild(d);document.getElementById('loader-watchdog-btn').addEventListener('click',function(){window.location.reload();});},8000);})();`
     ]
   ],
 
