@@ -2,7 +2,7 @@ import { defineConfig, loadEnv } from 'vitepress';
 import tailwindcss from '@tailwindcss/vite';
 import { processData } from '@chunge16/vitepress-blogs-theme/config';
 import { zhCN } from 'date-fns/locale';
-import { buildPageHeadTags, buildSeoArtifacts, transformSitemapItems } from './seo.js';
+import { buildPageHeadTags, buildSeoArtifacts, transformSitemapItems, isPageExcluded } from './seo.js';
 import { createSeoConfig, expandNewlines } from './seo-config.js';
 
 // 站点配置唯一来源：.env（VITE_SITE_* 站点基础、VITE_SEO_* SEO 独立覆盖），代码不硬编码
@@ -139,6 +139,15 @@ export default defineConfig({
 
     search: {
       provider: 'local',
+      options: {
+        // 完全屏蔽工单搜索：命中 SEO 排除规则的页面（工单详情/列表目录等）跳过站内搜索索引。
+        // 其余页面保持 VitePress 默认行为（frontmatter.search === false 亦跳过）。
+        _render: async (raw, env, md) => {
+          if (isPageExcluded(env.relativePath ?? '')) return '';
+          const html = await md.renderAsync(raw, env);
+          return env.frontmatter?.search === false ? '' : html;
+        },
+      },
     },
 
     // VPB（VitePress Blog）主题配置：路径均为相对 srcDir（postsPath/authorsPath）或路由路径（path/tagsPath）

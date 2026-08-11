@@ -1949,6 +1949,22 @@ body::after {
   opacity: 0.75 !important;
 }
 
+/* 顶栏顶部 3px 辉光线：蓝渐变 → danger 红（仅限 404，覆盖上方全局 .VPNavBar::before） */
+.is-404-page .VPNavBar::before {
+  background: linear-gradient(90deg, var(--ak-accent), var(--ak-accent) 45%, var(--ak-accent)) !important;
+  animation: ak-nav-glow-danger 2s ease-in-out infinite alternate;
+}
+
+@keyframes ak-nav-glow-danger {
+  from {
+    filter: drop-shadow(0 0 2px rgba(246, 84, 14, 0.35));
+  }
+
+  to {
+    filter: drop-shadow(0 0 10px rgba(246, 84, 14, 0.8));
+  }
+}
+
 /* 顶栏分隔线：danger 红 */
 .is-404-page .VPNavBar .divider-line {
   background-color: var(--ak-accent) !important;

@@ -18,7 +18,9 @@ import { join } from 'node:path';
  */
 export const SEO_EXCLUDE_PAGES = {
   pages: new Set(['AGENTS.md', 'readme.md']),
-  dirs: [],
+  // 工单全部页面：详情页数据源目录 assets/tickets/ 与列表页目录 support/tickets/ 整目录排除，
+  // 不进入 sitemap.xml / llms.txt，不注入 canonical / OG / JSON-LD，并在 robots.txt 生成 Disallow、页面输出 noindex
+  dirs: ['assets/tickets/', 'support/tickets/'],
   // 文件名（basename）含 example 的页面，任意层级；不匹配目录（目录条目转为 xxx/index.md，basename 为 index.md）
   patterns: [/(^|\/)[^/]*example[^/]*\.md$/],
 };
@@ -67,7 +69,10 @@ export function resolvePageUrl(siteUrl, base, relativePath, cleanUrls) {
 export function buildPageHeadTags({ seo, base, cleanUrls, pageData }) {
   const { siteUrl, siteName, siteDescription, siteLang, alternateNames, author } = seo;
   const { relativePath, title, description, frontmatter, lastUpdated, isNotFound } = pageData;
-  if (isNotFound || isPageExcluded(relativePath)) return [];
+  if (isNotFound || isPageExcluded(relativePath)) {
+    // 排除页：不注入 canonical / OG / JSON-LD，并显式禁止机器人索引与跟踪
+    return [['meta', { name: 'robots', content: 'noindex, nofollow' }]];
+  }
 
   const url = resolvePageUrl(siteUrl, base, relativePath, cleanUrls);
   const desc = description || siteDescription;
@@ -186,7 +191,13 @@ export async function buildSeoArtifacts(siteConfig, { seo }) {
   }
   const { outDir, srcDir, pages, site, cleanUrls } = siteConfig;
 
-  const robots = ['User-agent: *', 'Allow: /', '', `Sitemap: ${siteUrl}/sitemap.xml`, ''].join('\n');
+  // robots.txt：工单等排除目录整目录禁止抓取（路径前缀匹配）
+  const robotsLines = ['User-agent: *', 'Allow: /'];
+  for (const dir of SEO_EXCLUDE_PAGES.dirs) {
+    robotsLines.push(`Disallow: /${dir.replace(/^\/+|\/+$/g, '')}/`);
+  }
+  robotsLines.push('', `Sitemap: ${siteUrl}/sitemap.xml`, '');
+  const robots = robotsLines.join('\n');
   await writeFile(join(outDir, 'robots.txt'), robots, 'utf-8');
 
   const blocks = [`# ${siteName}`, '', `> ${siteDescription}`, '', '## 站点页面', ''];
