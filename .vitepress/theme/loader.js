@@ -24,22 +24,23 @@ export const loaderHeadScript = `(function () {
 
   // ---- 常量 ----
   var BASE = 5;              // 起始进度（首帧即有可见爬升）
-  var MIN_MS = 1400;         // 最短展示时长
-  var FORCE_MS = 5000;       // 兜底：到时强制完成收尾
+  var FORCE_MS = 3000;       // 兜底：到时强制完成收尾（缩短：进度高位等待不再拖几秒）
+  var SPRINT_MS = 1000;      // 尾段冲刺：进度进入 90+ 高位（主要资源已就绪）后最多等 1s 即强制收尾，不再死等 fonts 等慢尾节点
   var WATCHDOG_MS = 8000;    // 总超时：仍未完成（如主 JS 未水合）→ 失败态
   var W = { dom: 8, hydrate: 14, styles: 14, scripts: 10, images: 12, fonts: 8, load: 29 };
-  var CREEP_CAP = 88;
+  var CREEP_CAP = 95;        // 环境进度封顶：留出 load 权重收尾段；节点等待期进度持续爬升，避免完全静止
   var CREEP_STEP = 0.08;     // 每帧固定步进，环境进度匀速爬升防停滞
-  var SLICE_STEP = 5;        // load 段时间切片步进
-  var SLICE_TOTAL = 29;      // 覆盖满 load 权重（最后一次轻微溢出由 nodeTotal 上限兜底）
-  var SLICE_MS = 300;
+  var PROGRESS_RATE = 0.3;   // 距目标差距的追赶比例：差距大时快速逼近（响应节点跳变）
+  var PROGRESS_MIN_STEP = 0.25; // 每帧最小推进：接近目标时仍匀速（避免越往后越慢，且保证能收敛到 100 触发收尾）
+  var SLICE_STEP = 10;       // load 段时间切片步进（放大步进 + 缩短间隔：消除 90%+ 尾段每 5% 停 300ms 的台阶式卡顿）
+  var SLICE_TOTAL = 30;      // 覆盖满 load 权重（每次 10，3 次即到 30，轻微溢出由 nodeTotal 上限兜底）
+  var SLICE_MS = 150;
   var MAX_LOGS = 256;
   var LOG_MS = 10;           // 日志打印限流：每 10ms 最多输出一条
 
-  var t0 = performance.now();
   var nodeTotal = BASE, creep = BASE, progress = BASE;
   var finished = false;
-  var raf = 0, forceTimer = 0, watchdogTimer = 0, sliceTimer = 0;
+  var raf = 0, forceTimer = 0, watchdogTimer = 0, sliceTimer = 0, sprintTimer = 0;
   var fontTimer = 0, stylesTimer = 0, scriptsTimer = 0, imagesTimer = 0;
   var logQueue = [], logTimer = 0, logSeq = 0;
   var completed = {};
@@ -92,14 +93,32 @@ export const loaderHeadScript = `(function () {
     if (finished) return;
     if (creep < CREEP_CAP) creep = Math.min(CREEP_CAP, creep + CREEP_STEP);
     var target = Math.max(nodeTotal, creep);
-    if (target > progress) setProgress(Math.min(target, progress + (target - progress) * 0.12 + 0.05));
-    if (nodeTotal >= 100 && (performance.now() - t0) >= MIN_MS && progress >= 100) finish();
-    else raf = requestAnimationFrame(tick);
+    if (target > progress) {
+      // 差距大按比例快速追赶，接近目标则按最小步进匀速推进：
+      // 纯指数逼近会越推越慢且永远到不了 target（进度卡 99.x% 只能等兜底超时），
+      // 最小步进保证后段不降速、且一定能到达 100 触发收尾
+      var step = Math.max(PROGRESS_MIN_STEP, (target - progress) * PROGRESS_RATE);
+      setProgress(Math.min(target, progress + step));
+    }
+    // 全部节点完成：进度直接置 100% 并立即收尾（不再逐帧追赶，消除"接近 100% 的等待"）
+    if (nodeTotal >= 100) {
+      setProgress(100);
+      finish();
+    } else {
+      // 尾段冲刺：主要资源已就绪（90+）后启动限时收尾，避免 93% 附近死等慢尾节点（如 fonts）
+      if (nodeTotal >= 90 && !sprintTimer) {
+        sprintTimer = setTimeout(function () {
+          if (!finished) nodeTotal = 100;
+        }, SPRINT_MS);
+      }
+      raf = requestAnimationFrame(tick);
+    }
   }
   function stopTimers() {
     cancelAnimationFrame(raf);
     clearTimeout(forceTimer);
     clearTimeout(watchdogTimer);
+    clearTimeout(sprintTimer);
     clearTimeout(fontTimer);
     clearTimeout(stylesTimer);
     clearTimeout(scriptsTimer);
@@ -111,15 +130,13 @@ export const loaderHeadScript = `(function () {
     if (finished) return;
     finished = true;
     stopTimers();
+    // 进度已到 100% 即收尾：立即触发内容分步入场并淡出遮罩（淡出 0.15s，100% 后基本瞬隐）
     document.documentElement.classList.add('is-loaded');
-    // 先触发内容分步入场，再淡出遮罩，交叠过渡更顺滑
+    root.style.transition = 'opacity .15s ease';
+    root.style.opacity = '0';
     setTimeout(function () {
-      root.style.transition = 'opacity .5s ease';
-      root.style.opacity = '0';
-      setTimeout(function () {
-        if (root.parentNode) root.parentNode.removeChild(root);
-      }, 520);
-    }, 260);
+      if (root.parentNode) root.parentNode.removeChild(root);
+    }, 180);
   }
   function fail() {
     if (finished) return;
@@ -128,12 +145,12 @@ export const loaderHeadScript = `(function () {
     // 失败态核心样式内联（关键样式加载失败/断网时主题 CSS 可能不可用）
     root.innerHTML =
       '<div class="page-loader__fail" style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:24px 36px;text-align:center">' +
-      '<p class="page-loader__fail-title" style="margin:0;font-size:24px;font-weight:700;letter-spacing:.18em;color:var(--ak-accent,#f6540e)">加载失败</p>' +
+      '<p class="page-loader__fail-title" style="margin:0;font-size:24px;font-weight:700;letter-spacing:.18em;color:var(--ak-accent,#f6540e)">神经网络连接中断</p>' +
       '<p class="page-loader__fail-hint" style="margin:0;font-size:13px;letter-spacing:.12em;color:var(--vp-c-text-3,#8b94a6)">网络或资源异常，请检查连接后重试</p>' +
-      '<button type="button" class="page-loader__retry" style="margin-top:6px;padding:8px 28px;border:1px solid var(--ak-accent,#f6540e);background-color:transparent;color:var(--ak-accent,#f6540e);font-size:14px;letter-spacing:.18em;cursor:pointer" onclick="window.location.reload()">刷新重试</button></div>';
+      '<button type="button" class="page-loader__retry" style="margin-top:6px;padding:8px 28px;border:1px solid var(--ak-accent,#f6540e);background-color:transparent;color:var(--ak-accent,#f6540e);font-size:14px;letter-spacing:.18em;cursor:pointer" onclick="window.location.reload()">重试</button></div>';
   }
 
-  // ---- 背景加载日志：fetch/XHR（方法/状态码）+ 资源采样（CSS/JS/IMG/FONT） ----
+  // ---- 背景加载日志：fetch/XHR（方法/状态码）+ 资源采样（CSS/JS/IMG/FONT），每行含相对时间/耗时/传输大小 ----
   function netLogUrl(input) {
     try {
       var u = new URL(typeof input === 'string' ? input : input.url, window.location.href);
@@ -142,8 +159,15 @@ export const loaderHeadScript = `(function () {
       return typeof input === 'string' ? input : String(input);
     }
   }
-  function pushNetLog(method, url, status, ms, err) {
-    logQueue.push({ id: ++logSeq, method: method, url: url, status: status, ms: ms, err: !!err });
+  // 字节数 → 可读大小（0/非法/未知 显示 -，缓存命中由调用方传 'cache'）
+  function fmtSize(bytes) {
+    if (typeof bytes !== 'number' || !isFinite(bytes) || bytes <= 0) return '-';
+    if (bytes < 1024) return bytes + 'B';
+    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + 'KB';
+    return (bytes / 1048576).toFixed(1) + 'MB';
+  }
+  function pushNetLog(method, url, status, ms, err, time, size) {
+    logQueue.push({ id: ++logSeq, method: method, url: url, status: status, ms: ms, err: !!err, time: time, size: size });
     if (!logTimer) logTimer = setTimeout(drainLog, LOG_MS);
   }
   function drainLog() {
@@ -152,14 +176,18 @@ export const loaderHeadScript = `(function () {
     if (item) {
       var li = document.createElement('li');
       li.innerHTML =
+        '<span class="page-loader__debug-time"></span>' +
         '<span class="page-loader__debug-method"></span>' +
         '<span class="page-loader__debug-url"></span>' +
         '<span class="page-loader__debug-status"></span>' +
-        '<span class="page-loader__debug-ms"></span>';
-      li.children[0].textContent = item.method;
-      li.children[1].textContent = item.url;
-      li.children[2].textContent = item.status;
-      li.children[3].textContent = item.ms + 'ms';
+        '<span class="page-loader__debug-ms"></span>' +
+        '<span class="page-loader__debug-size"></span>';
+      li.children[0].textContent = '+' + item.time + 'ms';
+      li.children[1].textContent = item.method;
+      li.children[2].textContent = item.url;
+      li.children[3].textContent = item.status;
+      li.children[4].textContent = item.ms + 'ms';
+      li.children[5].textContent = item.size;
       logEl.appendChild(li);
       while (logEl.children.length > MAX_LOGS) logEl.removeChild(logEl.firstChild);
     }
@@ -170,14 +198,19 @@ export const loaderHeadScript = `(function () {
     window.fetch = function () {
       var args = arguments, input = args[0], init = args[1];
       var method = ((init && init.method) || (input && input.method) || 'GET').toUpperCase();
-      var t0 = performance.now();
+      var tStart = performance.now();
       return nativeFetch.apply(window, args).then(
         function (res) {
-          pushNetLog(method, netLogUrl(input), res.status, Math.round(performance.now() - t0), false);
+          var len = 0;
+          if (res.headers) {
+            var raw = res.headers.get('content-length');
+            len = raw ? parseInt(raw, 10) : 0;
+          }
+          pushNetLog(method, netLogUrl(input), res.status, Math.round(performance.now() - tStart), false, Math.round(tStart), fmtSize(len));
           return res;
         },
         function (e) {
-          pushNetLog(method, netLogUrl(input), 'ERR', Math.round(performance.now() - t0), true);
+          pushNetLog(method, netLogUrl(input), 'ERR', Math.round(performance.now() - tStart), true, Math.round(tStart), '-');
           throw e;
         }
       );
@@ -191,11 +224,13 @@ export const loaderHeadScript = `(function () {
   XMLHttpRequest.prototype.send = function () {
     var meta = this.__layoNet;
     if (meta) {
-      var t0 = performance.now();
+      var tStart = performance.now();
       this.addEventListener('loadend', function () {
         var st = this.status;
         var err = st === 0;
-        pushNetLog(meta.method, netLogUrl(meta.url), err ? 'ERR' : st, Math.round(performance.now() - t0), err);
+        var raw = this.getResponseHeader ? this.getResponseHeader('Content-Length') : null;
+        var len = raw ? parseInt(raw, 10) : 0;
+        pushNetLog(meta.method, netLogUrl(meta.url), err ? 'ERR' : st, Math.round(performance.now() - tStart), err, Math.round(tStart), fmtSize(len));
       });
     }
     return xhrSend.apply(this, arguments);
@@ -212,6 +247,10 @@ export const loaderHeadScript = `(function () {
       default: return 'REQ';
     }
   }
+  function resourceSize(e) {
+    // transferSize 为 0 表示缓存命中/同文档资源
+    return e.transferSize > 0 ? fmtSize(e.transferSize) : 'cache';
+  }
   function trackResources() {
     if (typeof PerformanceObserver === 'undefined') return;
     try {
@@ -219,13 +258,13 @@ export const loaderHeadScript = `(function () {
         return RESOURCE_SKIP.indexOf(e.initiatorType) === -1;
       }).slice(-MAX_LOGS);
       for (var i = 0; i < done.length; i++) {
-        pushNetLog(resourceMethod(done[i].initiatorType), netLogUrl(done[i].name), 'OK', Math.round(done[i].duration), false);
+        pushNetLog(resourceMethod(done[i].initiatorType), netLogUrl(done[i].name), 'OK', Math.round(done[i].duration), false, Math.round(done[i].startTime), resourceSize(done[i]));
       }
       new PerformanceObserver(function (list) {
         var entries = list.getEntries();
         for (var j = 0; j < entries.length; j++) {
           if (RESOURCE_SKIP.indexOf(entries[j].initiatorType) !== -1) continue;
-          pushNetLog(resourceMethod(entries[j].initiatorType), netLogUrl(entries[j].name), 'OK', Math.round(entries[j].duration), false);
+          pushNetLog(resourceMethod(entries[j].initiatorType), netLogUrl(entries[j].name), 'OK', Math.round(entries[j].duration), false, Math.round(entries[j].startTime), resourceSize(entries[j]));
         }
       }).observe({ type: 'resource', buffered: false });
     } catch (e) { /* 环境不支持则忽略 */ }
@@ -255,7 +294,7 @@ export const loaderHeadScript = `(function () {
       if (settled) return;
       addProgress(remaining * unit);
       settled = true;
-    }, 3000);
+    }, 2000);
     for (var i = 0; i < links.length; i++) (function (l) {
       if (l.sheet) return finishOne(false);
       l.addEventListener('load', function () { finishOne(false); }, { once: true });
@@ -280,7 +319,7 @@ export const loaderHeadScript = `(function () {
       if (settled) return;
       addProgress(remaining * unit);
       settled = true;
-    }, 2500);
+    }, 1500);
     for (var i = 0; i < scripts.length; i++) (function (s) {
       if (alreadyDone(s)) return finishOne();
       s.addEventListener('load', finishOne, { once: true });
@@ -301,7 +340,7 @@ export const loaderHeadScript = `(function () {
       if (settled) return;
       addProgress(remaining * unit);
       settled = true;
-    }, 3000);
+    }, 2000);
     for (var i = 0; i < imgs.length; i++) (function (img) {
       if (img.complete) return finishOne();
       img.addEventListener('load', finishOne, { once: true });
@@ -315,7 +354,7 @@ export const loaderHeadScript = `(function () {
   }
   function trackFonts() {
     if (!document.fonts) return complete('fonts');
-    fontTimer = setTimeout(function () { complete('fonts'); }, 4000);
+    fontTimer = setTimeout(function () { complete('fonts'); }, 2000);
     document.fonts.ready.then(function () {
       clearTimeout(fontTimer);
       complete('fonts');

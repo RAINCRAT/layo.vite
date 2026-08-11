@@ -1427,6 +1427,8 @@ html .vpb-page-title {
   --cc-modal-border-radius: 0;
   --cc-btn-border-radius: 0;
   --cc-pm-toggle-border-radius: 0;
+  /* 置于加载遮罩(z-index:9999990)之下，避免首次加载时挡住遮罩内左下角日志终端 */
+  --cc-z-index: 9999880;
 
   --cc-bg: var(--vp-c-bg-elv);
   --cc-primary-color: var(--vp-c-text-1);
@@ -2410,9 +2412,11 @@ body::after {
   font-variant-numeric: tabular-nums;
 }
 
+.page-loader__debug-time,
 .page-loader__debug-method,
 .page-loader__debug-status,
-.page-loader__debug-ms {
+.page-loader__debug-ms,
+.page-loader__debug-size {
   flex: none;
 }
 
