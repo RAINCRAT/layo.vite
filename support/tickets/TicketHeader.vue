@@ -59,7 +59,7 @@ function onBack() {
     <div class="ticket-header__tags">
       <el-tag :type="statusTag[frontmatter.status]" size="small">{{ frontmatter.status }}</el-tag>
       <el-tag :type="priorityTag[frontmatter.priority]" size="small" effect="plain">
-        {{ frontmatter.priority }}优先级
+        优先级：{{ frontmatter.priority }}
       </el-tag>
     </div>
 
