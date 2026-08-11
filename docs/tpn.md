@@ -18,7 +18,12 @@ title: 开放源代码许可
 ## [ak-ui](https://github.com/YunYouJun/ak-ui)
 
 - 许可证：MIT License
-- 用途：明日方舟风格 UI 组件库，其 CDN 样式经 [jsDelivr](https://www.jsdelivr.com/) 引入。
+- 用途：明日方舟风格 UI 组件库，经 npm 包 `@yunyoujun/ak-ui` 由主题入口（`theme/index.js`）打包引入（原 jsDelivr CDN 链接已失效 404，已移除）。
+
+## [Element Plus](https://element-plus.org)
+
+- 许可证：MIT License
+- 用途：工单追踪系统（列表页/详情页头部）的 UI 组件库，按需引入组件与 `theme-chalk` 组件样式（见 `support/tickets/element-plus-styles.js`），仅存在于工单页面。
 
 ## [Google Fonts](https://fonts.google.com/)
 

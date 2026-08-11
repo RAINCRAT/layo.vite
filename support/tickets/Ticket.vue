@@ -2,8 +2,7 @@
 import { ref, computed, reactive, provide, watch, onMounted } from 'vue';
 import { useRouter } from 'vitepress';
 import { data as tickets } from './tickets.data.js';
-import 'element-plus/dist/index.css';
-import 'element-plus/theme-chalk/dark/css-vars.css';
+import './element-plus-styles.js';
 import {
   ID_INJECTION_KEY,
   ZINDEX_INJECTION_KEY,

@@ -26,19 +26,24 @@ export default defineConfig({
   lang: siteLang,
   cleanUrls: true,
   head: [
+    // 字体预连接：提前建连 Google Fonts 域名，缩短字体文件下载延迟（样式表已改非阻塞加载）
+    ['link', { rel: 'preconnect', href: 'https://fonts.googleapis.com' }],
+    ['link', { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' }],
+    // Google Fonts 样式表非阻塞加载：先以 print 媒体加载，就绪后切回 all（display=swap 先回退后换入），
+    // 不再阻塞首屏渲染；ak-ui 样式已由 theme/index.js 打包引入（npm 包），不再经 CDN 重复加载（原 CDN 链接已 404）
     [
       'link',
       {
         rel: 'stylesheet',
-        href: 'https://cdn.jsdelivr.net/gh/YunYouJun/ak-ui@gh-pages/css/ak-ui.min.css'
+        media: 'print',
+        href: 'https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@100..900&family=Noto+Serif+SC:wght@100..900&display=swap',
+        onload: "this.media='all'"
       }
     ],
     [
-      'link',
-      {
-        rel: 'stylesheet',
-        href: 'https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@100..900&family=Noto+Serif+SC:wght@100..900&display=swap'
-      }
+      'noscript',
+      {},
+      '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@100..900&family=Noto+Serif+SC:wght@100..900&display=swap">'
     ],
     // 全站静态 SEO meta（值统一取自 seo-config.js）
     ['meta', { name: 'robots', content: seo.robotsContent }],

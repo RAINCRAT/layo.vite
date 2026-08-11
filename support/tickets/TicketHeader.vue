@@ -2,8 +2,7 @@
 import { computed, provide } from 'vue';
 import { useData, useRoute, useRouter } from 'vitepress';
 import MarkdownIt from 'markdown-it';
-import 'element-plus/dist/index.css';
-import 'element-plus/theme-chalk/dark/css-vars.css';
+import './element-plus-styles.js';
 import {
   ID_INJECTION_KEY,
   ZINDEX_INJECTION_KEY,
