@@ -20,6 +20,7 @@ export function createSeoConfig({ siteUrl, siteName, siteDescription, siteLang }
     VITE_SEO_TWITTER_CARD,
     VITE_SEO_ROBOTS_CONTENT,
     VITE_SEO_TITLE_SUFFIX,
+    VITE_INDEXNOW_KEY,
   } = env;
 
   return {
@@ -48,5 +49,7 @@ export function createSeoConfig({ siteUrl, siteName, siteDescription, siteLang }
     twitterCard: VITE_SEO_TWITTER_CARD || 'summary',
     // 页面标题后缀（<title> / og:title 的 `| 后缀`）：与 SEO 站名独立，未设置时回退到 SEO 站名
     titleSuffix: VITE_SEO_TITLE_SUFFIX || siteName,
+    // IndexNow 推送密钥（构建时生成 {key}.txt 并推送全站 URL，Bing/搜狗等即时收录通知）
+    indexNowKey: VITE_INDEXNOW_KEY || '',
   };
 }

@@ -204,7 +204,7 @@ function readableTitle(page) {
  * 未配置 VITE_SITE_URL 时跳过，避免生成失效的绝对地址。
  */
 export async function buildSeoArtifacts(siteConfig, { seo }) {
-  const { siteUrl, siteName, siteDescription } = seo;
+  const { siteUrl, siteName, siteDescription, indexNowKey } = seo;
   if (!siteUrl) {
     console.warn('[seo] 未配置 VITE_SITE_URL，跳过 robots.txt / llms.txt 生成');
     return;
@@ -221,13 +221,38 @@ export async function buildSeoArtifacts(siteConfig, { seo }) {
   await writeFile(join(outDir, 'robots.txt'), robots, 'utf-8');
 
   const blocks = [`# ${siteName}`, '', `> ${siteDescription}`, '', '## 站点页面', ''];
+  const urlList = [];
   for (const page of pages) {
     if (page === '404.md' || isPageExcluded(page)) continue;
     const url = resolvePageUrl(siteUrl, site.base, page, cleanUrls);
+    urlList.push(url);
     const title =
       (await readPageTitle(srcDir, page)) ??
       (page.replace(/\.md$/, '') === 'index' ? siteName : readableTitle(page));
     blocks.push(`- [${title}](${url})`);
   }
   await writeFile(join(outDir, 'llms.txt'), blocks.join('\n'), 'utf-8');
+
+  // IndexNow：生成 {key}.txt 密钥文件到站点根，并把全站 URL 推送给搜索引擎（Bing/搜狗等）。
+  // 密钥来自 .env 的 VITE_INDEXNOW_KEY（与域名绑定，更换域名需重新生成），未配置则跳过。
+  if (indexNowKey) {
+    const keyFile = `${indexNowKey}.txt`;
+    await writeFile(join(outDir, keyFile), indexNowKey, 'utf-8');
+    const host = new URL(siteUrl).host;
+    try {
+      const res = await fetch('https://api.indexnow.org/indexnow', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json; charset=utf-8' },
+        body: JSON.stringify({
+          host,
+          key: indexNowKey,
+          keyLocation: `${siteUrl}/${keyFile}`,
+          urlList,
+        }),
+      });
+      console.log(`[seo] IndexNow 已提交 ${urlList.length} 个 URL（HTTP ${res.status}）`);
+    } catch (err) {
+      console.warn(`[seo] IndexNow 推送失败：${err.message}`);
+    }
+  }
 }

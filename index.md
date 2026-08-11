@@ -23,9 +23,6 @@ hero:
       link: /api-examples
 
 features:
-  - title: 网站正在建设中
-    details: 本网站仍在建设，暂未投入生产环境使用。
-    link: /
   - title: ICP备案
     details: |
       萌ICP备 20260812 号<br />
