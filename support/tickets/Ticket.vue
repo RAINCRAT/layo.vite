@@ -60,6 +60,9 @@ const pagedTickets = computed(() => {
 const tableRef = ref(null);
 // 标题列最大宽度（窄屏不足时封顶，避免横向滚动距离过长）；宽屏时标题吸收全部剩余宽度
 const TITLE_MAX_WIDTH = 320;
+// 工单号列最小保障宽度：标准工单号格式（如 AD-260805-01）在此宽度内不会被截断。
+// 首次测量可能因字体未加载完成而低估列宽，取测量值与下限的较大值，确保该列永不出现省略号
+const ID_MIN_WIDTH = 128;
 // 依次对应表头列：id/title/status/priority/channel/reporter/createdAt/action
 const MEASURE_KEYS = ['id', 'title', 'status', 'priority', 'channel', 'reporter', 'createdAt', 'action'];
 const colWidth = reactive({ id: undefined, status: undefined, priority: undefined, channel: undefined, reporter: undefined, createdAt: undefined, action: undefined });
@@ -87,6 +90,8 @@ function measureColumns() {
     const key = MEASURE_KEYS[i];
     if (!key || w <= 2) return;
     if (key === 'title') titleMinWidth.value = Math.min(w, TITLE_MAX_WIDTH);
+    // 工单号列取测量值与下限的较大值：测量低估（如字体未就绪）时列宽也不会小于标准工单号所需宽度
+    else if (key === 'id') colWidth.id = Math.max(w, ID_MIN_WIDTH);
     else colWidth[key] = w;
   });
 }
@@ -102,6 +107,9 @@ function scheduleMeasure(tryCount = 0) {
 }
 
 onMounted(() => scheduleMeasure(0));
+// 网络字体（Google Fonts）异步加载：首次测量可能基于回退字体偏窄，
+// 字体就绪后再测一次，避免各列宽不足出现省略号
+document.fonts?.ready.then(() => scheduleMeasure(0));
 // 翻页 / 筛选变化后，按新一页内容重新测量
 watch(pagedTickets, () => scheduleMeasure(0));
 
@@ -125,12 +133,7 @@ function onViewDetail(row) {
 <template>
   <div class="ticket-demo">
     <div class="ticket-demo__toolbar">
-      <el-input
-        v-model="keyword"
-        class="ticket-demo__search"
-        placeholder="搜索工单号 / 标题 / 来源"
-        clearable
-      />
+      <el-input v-model="keyword" class="ticket-demo__search" placeholder="搜索工单号 / 标题 / 来源" clearable />
       <el-select v-model="statusFilter" class="ticket-demo__status" placeholder="全部状态" clearable>
         <el-option v-for="s in Object.keys(statusTag)" :key="s" :label="s" :value="s" />
       </el-select>
@@ -166,14 +169,8 @@ function onViewDetail(row) {
       </el-table-column>
     </el-table>
 
-    <el-pagination
-      v-model:current-page="page"
-      :page-size="pageSize"
-      :total="filteredTickets.length"
-      layout="total, prev, pager, next"
-      background
-      class="ticket-demo__pager"
-    />
+    <el-pagination v-model:current-page="page" :page-size="pageSize" :total="filteredTickets.length"
+      layout="total, prev, pager, next" background class="ticket-demo__pager" />
   </div>
 </template>
 
@@ -184,15 +181,19 @@ function onViewDetail(row) {
   gap: 12px;
   margin-bottom: 12px;
 }
+
 .ticket-demo__search {
   width: 260px;
 }
+
 .ticket-demo__status {
   width: 140px;
 }
+
 .ticket-demo__create {
   margin-left: auto;
 }
+
 .ticket-demo__pager {
   margin-top: 12px;
   justify-content: flex-end;
