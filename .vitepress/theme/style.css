@@ -2238,149 +2238,217 @@ body::after {
   color: var(--ak-primary);
 }
 
-/* ============================ H. 加载遮罩与路由进度条（LoadingOverlay） ============================ */
+/* ============================ H. 页面加载遮罩与顶部进度条 ============================ */
 
-/* 根元素关键样式（定位/层级/底色）由组件内联，保证主题 CSS 未加载时遮罩也能遮挡首屏；
- * 此处只补视觉：网格纹理、内容排版、进度条、失败态与内容分步入场。 */
+/* ---- 全屏加载遮罩 ----
+ * 关键样式（定位/层级/底色）由组件内联，本区块负责装饰与过渡。
+ * 明日方舟加载风格：居中大百分比 + 横跨屏幕贴底进度条 + 顶部警示条纹，保持简洁。 */
 
-/* ---- H1. 路由切换顶部细进度条：固定顶部、ak 蓝渐变、置于导航之上 ---- */
+.page-loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--ak-font-sans);
+}
+
+/* 顶部黄黑警示条纹（与导航分隔条同款流动） */
+.page-loader::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: -1;
+  height: 6px;
+  background: repeating-linear-gradient(-45deg, var(--ak-yellow) 0 8px, #000 8px 16px);
+  background-size: 22.63px 100%;
+  opacity: 0.5;
+  animation: ak-hazard-scroll 0.9s linear infinite;
+  pointer-events: none;
+}
+
+/* 居中大百分比 */
+.page-loader__pct {
+  font-family: var(--ak-font-serif);
+  font-size: 76px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--ak-primary);
+  text-shadow: 0 0 28px var(--vp-c-shadow-brand);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 加载失败状态：错误提示 + 刷新重试（danger 红，与 404 警戒主题呼应） */
+.page-loader__fail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 24px 36px;
+  text-align: center;
+}
+
+.page-loader__fail-title {
+  margin: 0;
+  font-family: var(--ak-font-serif);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--ak-accent);
+  text-shadow: 0 0 20px var(--vp-c-shadow-danger);
+}
+
+.page-loader__fail-hint {
+  margin: 0;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  color: var(--vp-c-text-3);
+}
+
+.page-loader__retry {
+  margin-top: 6px;
+  padding: 8px 28px;
+  border: 1px solid var(--ak-accent);
+  background-color: transparent;
+  color: var(--ak-accent);
+  font-family: var(--ak-font-sans);
+  font-size: 14px;
+  letter-spacing: 0.18em;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
+.page-loader__retry:hover {
+  background-color: var(--ak-accent);
+  color: #fff;
+  box-shadow: 0 0 12px var(--vp-c-shadow-danger);
+}
+
+/* 横跨屏幕的进度条（抬离底边，与回到顶部按钮的 24px 边距对齐） */
+.page-loader__track {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 24px;
+  height: 8px;
+  border-top: 1px solid var(--vp-c-border);
+  background-color: var(--vp-c-bg-mute);
+  overflow: hidden;
+}
+
+.page-loader__bar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  background: linear-gradient(90deg, var(--ak-dark-blue), var(--ak-primary));
+  transition: width 0.05s linear;
+  will-change: width;
+}
+
+/* 斜向高光带（流动） */
+.page-loader__bar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.35) 0 6px, transparent 6px 12px);
+  background-size: 16.97px 100%;
+  animation: ak-hazard-scroll 0.8s linear infinite;
+}
+
+/* 黄色前沿标记 */
+.page-loader__bar::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 6px;
+  background: var(--ak-yellow);
+  box-shadow: 0 0 10px rgba(255, 216, 2, 0.8);
+}
+
+/* 遮罩淡出过渡 */
+.loader-fade-leave-active {
+  transition: opacity 0.5s ease;
+}
+
+.loader-fade-leave-to {
+  opacity: 0;
+}
+
+/* ---- 路由异步加载顶部细进度条 ---- */
 .route-progress {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
+  right: 0;
   height: 2px;
-  z-index: 9999999;
+  z-index: 9999991;
   pointer-events: none;
 }
 
 .route-progress__bar {
   height: 100%;
   background: linear-gradient(90deg, var(--ak-dark-blue), var(--ak-primary));
-  box-shadow: 0 0 8px var(--vp-c-shadow-brand-strong);
-  transition: width 0.12s linear;
+  box-shadow: 0 0 8px var(--vp-c-shadow-brand);
+  transition: width 0.25s ease;
 }
 
-/* ---- H2. 全屏遮罩排版：百分比居中 + 贴底横跨进度条（方舟加载风格） ---- */
-.page-loader {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  /* 工业网格纹理与全站背景呼应（底色仍由内联样式控制，图像层叠加其上） */
-  background-image:
-    linear-gradient(var(--vp-c-grid) 1px, transparent 1px),
-    linear-gradient(90deg, var(--vp-c-grid) 1px, transparent 1px);
-  background-size: 44px 44px, 44px 44px;
+/* ---- 遮罩结束后的内容分步入场（错峰浮现，营造分步加载观感） ---- */
+html.is-loaded .VPNavBar {
+  animation: ak-rise-in 0.45s ease both;
 }
 
-/* 大百分比：终端字体 + ak 蓝辉光 */
-.page-loader__pct {
-  font-family: var(--ak-font-serif);
-  font-size: clamp(4rem, 14vw, 10rem);
-  font-weight: 900;
-  letter-spacing: 0.04em;
-  line-height: 1;
-  color: var(--ak-primary);
-  text-shadow: 0 0 28px var(--vp-c-shadow-brand-strong);
+html.is-loaded .VPHomeHero {
+  animation: ak-rise-in 0.45s 0.08s ease both;
 }
 
-/* 贴底进度条：横跨全屏、ak 蓝渐变 */
-.page-loader__track {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 4px;
-  background-color: var(--vp-c-border);
+html.is-loaded .VPHomeFeatures {
+  animation: ak-rise-in 0.45s 0.16s ease both;
 }
 
-.page-loader__bar {
-  height: 100%;
-  background: linear-gradient(90deg, var(--ak-dark-blue), var(--ak-primary) 45%, var(--ak-yellow));
-  box-shadow: 0 0 12px var(--vp-c-shadow-brand-strong);
-  transition: width 0.15s linear;
+html.is-loaded .VPDoc {
+  animation: ak-rise-in 0.45s 0.1s ease both;
 }
 
-/* ---- H3. 失败态：错误提示 + 刷新重试 ---- */
-.page-loader__fail {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  padding: 0 24px;
-  text-align: center;
+html.is-loaded .vpb-shell {
+  animation: ak-rise-in 0.45s 0.1s ease both;
 }
 
-.page-loader__fail-title {
-  margin: 0;
-  font-size: 1.75rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  color: var(--ak-accent);
+html.is-loaded .VPFooter {
+  animation: ak-rise-in 0.45s 0.26s ease both;
 }
 
-.page-loader__fail-hint {
-  margin: 0;
-  color: var(--vp-c-text-2);
-}
-
-/* 重试按钮：直角 + ak 蓝（同 .VPButton 视觉语言） */
-.page-loader__retry {
-  margin-top: 8px;
-  padding: 0 30px;
-  line-height: 42px;
-  border: 1px solid var(--vp-button-brand-border);
-  border-radius: 0;
-  background-color: var(--vp-button-brand-bg);
-  color: var(--vp-button-brand-text);
-  font-family: var(--ak-font-sans);
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  cursor: pointer;
-  transition: background-color 0.2s, border-color 0.2s;
-}
-
-.page-loader__retry:hover {
-  background-color: var(--vp-button-brand-hover-bg);
-  border-color: var(--vp-button-brand-hover-border);
-}
-
-/* ---- H4. 遮罩过渡：淡出（首屏初始渲染不触发进入动画，仅防 HMR 跳闪） ---- */
-.loader-fade-enter-active,
-.loader-fade-leave-active {
-  transition: opacity 0.45s ease;
-}
-
-.loader-fade-enter-from,
-.loader-fade-leave-to {
-  opacity: 0;
-}
-
-/* ---- H5. 内容分步入场：遮罩淡出前给 <html> 加 is-loaded，导航 → 正文 → 页脚依次浮现。
- * 用 animation（backwards 填充）而非 transition：动画结束后无残留 transform，不影响 sticky/fixed。 ---- */
-@keyframes ak-content-reveal {
+@keyframes ak-rise-in {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(12px);
   }
 
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
   }
 }
 
-html.is-loaded .VPNav,
-html.is-loaded .VPContent,
-html.is-loaded .VPFooter {
-  animation: ak-content-reveal 0.6s ease backwards;
-}
+/* 减弱动态效果：关停流动/入场动画 */
+@media (prefers-reduced-motion: reduce) {
+  .page-loader__bar::after,
+  .page-loader::after {
+    animation: none !important;
+  }
 
-html.is-loaded .VPContent {
-  animation-delay: 0.12s;
-}
+  .loader-fade-leave-active {
+    transition-duration: 0.1s;
+  }
 
-html.is-loaded .VPFooter {
-  animation-delay: 0.24s;
+  html.is-loaded .VPNavBar,
+  html.is-loaded .VPHomeHero,
+  html.is-loaded .VPHomeFeatures,
+  html.is-loaded .VPDoc,
+  html.is-loaded .vpb-shell,
+  html.is-loaded .VPFooter {
+    animation: none !important;
+  }
 }
