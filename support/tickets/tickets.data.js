@@ -6,12 +6,15 @@ export default createContentLoader('assets/tickets/*.md', {
   // 从 frontmatter 提取列表所需字段，并按提交时间倒序
   transform: (data) =>
     data
+      // 排除模板文件（example.md 不作为工单）
+      .filter(({ url }) => !url.endsWith('/example'))
       .map(({ url, frontmatter }) => ({
         url,
         id: frontmatter.id,
         title: frontmatter.title,
         status: frontmatter.status,
         priority: frontmatter.priority,
+        channel: frontmatter.channel,
         reporter: frontmatter.reporter,
         createdAt: frontmatter.createdAt,
       }))
