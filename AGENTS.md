@@ -77,7 +77,7 @@ layo.vite/                       # 仓库根（git 追踪文件全集，构建�
 8. 构建产物与缓存已被 `.gitignore` 忽略，不要提交。忽略范围覆盖多目录构建场景：根目录（`.vitepress/dist`、`.vitepress/cache`、`.vitepress/.temp`）与子目录（`./blogs/.vitepress/`、`./docs/.vitepress/` 的 `dist`/`cache`）。
 9. 网络资源（如 ak-ui CDN CSS、Google 字体 Noto Sans/Serif SC）通过 `config.js` 的 `head` 配置注入。
 10. 每次完成任务后检查是否需要更新 `AGENTS.md`。
-11. **全站主题变量映射集中在 `style.css` 顶部**：`--ak-*` 调色板/字体变量 → `--vp-c-*`（明/暗双主题）、`--vp-button-*`、`--vp-home-hero-*`、`--vp-custom-block-*`。新增全站风格化时优先改变量映射，避免硬编码颜色；文档风格化（导航/侧边栏/代码块/表格/引用/滚动条）位于 style.css 的"组件细节"区块；明日方舟强化装饰（卡片斜切角/角标、背景扫描线与六边形徽标、导航警示条纹、按钮光带动效）集中在 style.css 末尾的"明日方舟风格化增强"区块，新增强化逻辑追加到该区块；导航栏 40px 方形图标按钮（Cookie 偏好/社交链接）统一描边样式的"导航图标按钮规范"区块，新增同类按钮把类名加入其公共选择器即可继承。
+11. **全站主题变量映射集中在 `style.css` 顶部**：`--ak-*` 调色板/字体变量 → `--vp-c-*`（明/暗双主题）、`--vp-button-*`、`--vp-home-hero-*`、`--vp-custom-block-*`。新增全站风格化时优先改变量映射，避免硬编码颜色；文档风格化（导航/侧边栏/代码块/表格/引用/滚动条）位于 style.css 的"组件细节"区块；明日方舟强化装饰（卡片斜切角/角标、背景扫描线与六边形徽标、导航警示条纹、按钮光带动效）集中在 style.css 末尾的"明日方舟风格化增强"区块，新增强化逻辑追加到该区块；**工单系统（Element Plus）方舟化样式集中在文件末尾的"G. 工单系统（Element Plus）方舟化"区块**——以 `.is-tickets-page` 前缀限定（Element Plus 仅存在于工单页），内容为直角化/主题色映射、表格扫描线与 hover 蓝缘、尖角标签、按钮/输入/分页/描述列表、终端标题行，新增工单相关 el 组件样式追加到该区块；导航栏 40px 方形图标按钮（Cookie 偏好/社交链接）统一描边样式的"导航图标按钮规范"区块，新增同类按钮把类名加入其公共选择器即可继承。
 12. **ak-color 约束：不创建 ak-ui 未定义的 `--ak-*` 颜色变量**。ak-ui 官方调色板仅有 blue/dark-blue/light-blue/yellow/gray/dark/low/basic/primary/secondary/advanced；全站 danger/红色系统一复用既有 `--ak-accent`（#f6540e）与 `--vp-c-shadow-danger`（明暗映射）。新色一律改从上述变量派生，严禁自造。
 13. **404 页面主题约定**：
     - 根标识：`theme/Layout.vue` 依据 `page.isNotFound` 给根 Layout 注入 `is-404-page` 类；所有 404 专属样式以 `.is-404-page` / `.NotFound` 为前缀限定，避免污染全站。

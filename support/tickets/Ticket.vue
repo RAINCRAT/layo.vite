@@ -106,10 +106,13 @@ function scheduleMeasure(tryCount = 0) {
   measureColumns();
 }
 
-onMounted(() => scheduleMeasure(0));
-// 网络字体（Google Fonts）异步加载：首次测量可能基于回退字体偏窄，
-// 字体就绪后再测一次，避免各列宽不足出现省略号
-document.fonts?.ready.then(() => scheduleMeasure(0));
+onMounted(() => {
+  scheduleMeasure(0);
+  // 网络字体（Google Fonts）异步加载：首次测量可能基于回退字体偏窄，
+  // 字体就绪后再测一次，避免各列宽不足出现省略号
+  // （必须放在 onMounted 内：setup 顶层执行会在 SSR 时因 document 未定义而抛错）
+  document.fonts?.ready.then(() => scheduleMeasure(0));
+});
 // 翻页 / 筛选变化后，按新一页内容重新测量
 watch(pagedTickets, () => scheduleMeasure(0));
 
