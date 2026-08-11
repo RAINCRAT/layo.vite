@@ -164,8 +164,9 @@
   --vpb-bg-soft: var(--vp-c-bg-soft) !important;
   --vpb-bg-strong: var(--vp-c-bg-elv) !important;
   --vpb-panel-border: var(--vp-c-border) !important;
-  --vpb-panel-shadow: 0 18px 40px var(--vp-c-shadow-inset) !important;
-  --vpb-panel-shadow-hover: 0 26px 56px var(--vp-c-shadow) !important;
+  /* 面板阴影收敛：vpb 默认 18/40px、hover 26/56px 过重，克制到 ak 分层表面量级 */
+  --vpb-panel-shadow: 0 8px 24px var(--vp-c-shadow-inset) !important;
+  --vpb-panel-shadow-hover: 0 16px 36px var(--vp-c-shadow) !important;
   --vpb-text-strong: var(--vp-c-text-1) !important;
   --vpb-text-soft: var(--vp-c-text-2) !important;
   --vpb-grid-line: transparent !important;
@@ -373,15 +374,19 @@ html .vp-doc h3 {
 
 html .vp-doc h1 {
   font-size: clamp(2.8rem, 5vw, 4.2rem);
-  line-height: 1.05;
+  /* 行高对齐中文阅读舒适区间（vpb 默认 0.98 过挤，中文需 1.15+） */
+  line-height: 1.18;
 }
 
-/* 博客首页大标题与页面标题（vpb-display-title / vpb-page-title）同统一为 ak 主命令字面 */
+/* 博客首页大标题与页面标题（vpb-display-title / vpb-page-title）同统一为 ak 主命令字面。
+ * 行高从 vpb 默认 0.98/0.99 提至 1.14，字距归零（中文标题不再拥挤），字重 900（ak 命令粗黑） */
 html .vpb-display-title,
 html .vpb-page-title {
   border-top: none !important;
   font-family: var(--ak-font-command);
-  letter-spacing: -0.01em;
+  font-weight: 900 !important;
+  line-height: 1.14 !important;
+  letter-spacing: 0;
   color: var(--vp-c-text-1);
   /* 多行标题（frontmatter title 用 YAML 块标量换行）在此处真实换行显示 */
   white-space: pre-line;
@@ -922,6 +927,23 @@ html .vpb-page-title {
   transform: translateY(-2px);
 }
 
+/* 首页特性卡标题：VitePress 默认 16px/600 sans → ak 命令字面（衬线粗黑），与全站标题统一；
+ * 卡片内距 24px → 28px 增加呼吸感（scoped 样式需 !important） */
+.VPFeature .box {
+  padding: 28px !important;
+}
+
+.VPFeature .title {
+  font-family: var(--ak-font-command) !important;
+  font-weight: 900 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.4 !important;
+}
+
+.VPFeature .details {
+  line-height: 1.7 !important;
+}
+
 /* 博客文章卡片（vpb-card）：矩形直角表面（对齐 .ak-card）。
  * 卡片自带 Tailwind 圆角类（rounded-[1.5rem]），归零为直角；hover 品牌描边 + 轻浮起。 */
 .vpb-card {
@@ -933,6 +955,171 @@ html .vpb-page-title {
 .vpb-card:hover {
   border-color: var(--vp-c-brand-2) !important;
   transform: translateY(-2px);
+}
+
+/* ---- VPB 博客组件残留默认样式 ak 化 ----
+ * vpb 主题样式表加载顺序靠后（约定 15），其默认圆角（Tailwind rounded-* 工具类）、
+ * 代码块/行内代码圆角与 :root 的 --vp-c-brand 绿色系变量会压过本文件顶部品牌映射，
+ * 这里统一用 html 前缀 + !important 拉回 ak-ui 直角几何与品牌蓝。 */
+
+/* 圆角归零：页面容器/软面板/结果面板/静态卡片/胶囊/计数徽标 → 直角方块 */
+html .vpb-page,
+html .vpb-soft-panel,
+html .vpb-results-panel,
+html .vpb-card--static,
+html .vpb-pill,
+html .vpb-chip,
+html .vpb-chip-icon,
+html .vpb-chip-count {
+  border-radius: 0 !important;
+}
+
+/* 作者头像：vpb 默认圆形 → 直角（ak-ui 几何无圆形元素） */
+html .vpb-card img,
+html .vpb-soft-panel img {
+  border-radius: 0 !important;
+}
+
+/* 代码块/行内代码：vpb 默认 1.25rem/0.7rem 大圆角 → 回到"组件细节"区块设定 */
+html .vp-doc div[class*='language-'] {
+  border-radius: var(--ak-radius-subtle) !important;
+}
+
+html .vp-doc :not(pre) > code {
+  border-radius: 0 !important;
+}
+
+/* 品牌色：vpb :root 的 --vp-c-brand 绿色系覆盖了顶部映射，逐组件拉回 ak 品牌蓝 */
+html .vpb-kicker,
+html .vpb-divider-title,
+html .vpb-accent-link,
+html .vpb-accent-link:hover,
+html .vpb-link:hover,
+html .vpb-list-link:hover {
+  color: var(--vp-c-brand-1) !important;
+}
+
+/* vpb-kicker 两侧短线：vpb 默认绿 → ak 蓝 */
+html .vpb-kicker::before,
+html .vpb-kicker::after {
+  background: color-mix(in srgb, var(--ak-primary) 45%, transparent) !important;
+}
+
+/* 分类/标签胶囊（vpb-pill）：直角 + 品牌蓝字/描边/淡底（对齐 .ak-tag 色系） */
+html .vpb-pill {
+  color: var(--vp-c-brand-1) !important;
+  border-color: color-mix(in srgb, var(--ak-primary) 55%, transparent) !important;
+  background-color: var(--ak-info-tint) !important;
+}
+
+/* 标签 chip 悬停/激活态：vpb 默认绿 → 品牌蓝 */
+html .vpb-chip:hover,
+html .vpb-chip.is-active,
+html .dark .vpb-chip:hover,
+html .dark .vpb-chip.is-active {
+  color: var(--vp-c-brand-1) !important;
+}
+
+/* chip 激活图标徽标：vpb 默认绿底 → ak 蓝淡底 */
+html .vpb-chip.is-active .vpb-chip-icon {
+  color: var(--vp-c-brand-1) !important;
+  border-color: color-mix(in srgb, var(--ak-primary) 22%, transparent) !important;
+  background-color: color-mix(in srgb, var(--ak-primary) 14%, transparent) !important;
+}
+
+html .vpb-chip.is-active .vpb-chip-count {
+  background-color: color-mix(in srgb, var(--ak-primary) 20%, transparent) !important;
+}
+
+/* vpb :root 的 --vp-button-brand-* 与 --vp-custom-block-tip-* 绿色系同样加载靠后，
+ * 用 html:root（特异性高于 :root）重声明为 ak 品牌映射（与顶部"变量映射"区块一致） */
+html:root {
+  --vp-button-brand-border: var(--vp-c-brand-2);
+  --vp-button-brand-text: var(--vp-c-white);
+  --vp-button-brand-bg: var(--vp-c-brand-1);
+  --vp-button-brand-hover-border: var(--vp-c-brand-3);
+  --vp-button-brand-hover-text: var(--vp-c-white);
+  --vp-button-brand-hover-bg: var(--vp-c-brand-2);
+  --vp-button-brand-active-border: var(--vp-c-brand-2);
+  --vp-button-brand-active-text: var(--vp-c-white);
+  --vp-button-brand-active-bg: var(--vp-c-brand-3);
+
+  --vp-custom-block-tip-border: var(--ak-signal-info);
+  --vp-custom-block-tip-text: var(--vp-c-brand-1);
+  --vp-custom-block-tip-bg: var(--vp-c-brand-soft);
+}
+
+/* vpb 默认排版字体（Neue Haas / Iowan）→ ak-ui 规范：
+ * 元信息/标签小字走等宽终端字面，结果大标题走命令字面 */
+html .vpb-kicker,
+html .vpb-divider-title,
+html .vpb-list-link__meta,
+html .vpb-results-kicker,
+html .vpb-results-stat {
+  font-family: var(--ak-font-mono, monospace) !important;
+}
+
+html .vpb-results-title {
+  font-family: var(--ak-font-command) !important;
+}
+
+/* 文章卡片标题：vpb 默认 Iowan 衬线 600 → ak 命令字面（衬线粗黑 900） */
+html .vpb-card h2 a.vpb-link {
+  font-family: var(--ak-font-command) !important;
+  font-weight: 900 !important;
+}
+
+/* 文章卡片标题行距：vpb leading-[1.06] 过挤，中文多行标题提至 1.32；字距 -0.045em → -0.01em。
+ * 宽度限制放宽：vpb 默认 max-w-[18ch] 太窄致中文标题频繁断行，提至 28ch（配合行高呼吸感更从容）；
+ * 标题→摘要间距 mb-4(1rem) → 1.15rem，缓解多行标题与摘录的拥挤 */
+html .vpb-card h2 {
+  max-width: 28ch !important;
+  margin-bottom: 1.15rem !important;
+  line-height: 1.32 !important;
+  letter-spacing: -0.01em !important;
+}
+
+/* 卡片顶部白色高光：vpb 45% 白渐变在暗色下成"顶部白雾"，亮色也过强 → 收敛为微妙光泽 */
+html .vpb-card::before {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), transparent 32%) !important;
+}
+
+html .dark .vpb-card::before {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 32%) !important;
+}
+
+/* 标签页结果面板：vpb 字面米白/暗绿渐变 → ak 分层表面（bg-soft + 收敛阴影） */
+html .vpb-results-panel {
+  background: var(--vpb-bg-soft) !important;
+  box-shadow: var(--vpb-panel-shadow) !important;
+}
+
+html .vpb-results-panel::before {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), transparent 22%) !important;
+}
+
+/* 竖屏（<xl）文章页作者块弱化：vpb 默认 48px 头像 + text-xl 名字 + px-4 py-4 面板 + pb-10 留白，
+ * 在手机竖屏过于喧宾夺主 → 缩小头像/字号/留白，弱化为紧凑的署名行。
+ * 注意：作者块不在 .vp-doc 内（位于 .content-container / .VPDocAside 下），选择器用 html dl.pb-10 兜底 */
+@media (max-width: 1279.98px) {
+  html dl.pb-10 {
+    padding: 0.6rem 0 1.5rem !important;
+  }
+
+  html dl.pb-10 li.vpb-soft-panel {
+    padding: 0.4rem 0.75rem !important;
+    gap: 0.6rem !important;
+  }
+
+  html dl.pb-10 img {
+    width: 2rem !important;
+    height: 2rem !important;
+  }
+
+  html dl.pb-10 dd a.text-xl {
+    font-size: 0.95rem !important;
+    line-height: 1.3 !important;
+  }
 }
 
 /* ---- 真实 .ak-* 模块类的品牌字面量覆盖 ----
