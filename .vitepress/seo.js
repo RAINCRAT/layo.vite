@@ -11,9 +11,10 @@ import { join } from 'node:path';
 
 /**
  * 构建时跳过 SEO 处理的页面（相对 srcDir 的路径），命中任一规则即跳过：
- * - `pages`   ：精确匹配的页面路径（Set，查找 O(1)，适合大量精确排除）
- * - `dirs`    ：目录前缀（以 `/` 结尾），整目录及其子目录全部排除
- * - `patterns`：正则匹配（适合模糊/批量规则，如 `/^private\//`）
+ * - `pages`    ：精确匹配的页面路径（Set，查找 O(1)，适合大量精确排除）
+ * - `thinPages`：薄内容聚合页（Set），输出 noindex 但保留 follow（允许爬虫沿链接进入正文）
+ * - `dirs`     ：目录前缀（以 `/` 结尾），整目录及其子目录全部排除
+ * - `patterns` ：正则匹配（适合模糊/批量规则，如 `/^private\//`）
  * 命中项不会进入 sitemap.xml / llms.txt，也不注入 canonical / OG / JSON-LD。
  */
 export const SEO_EXCLUDE_PAGES = {
@@ -23,6 +24,13 @@ export const SEO_EXCLUDE_PAGES = {
     // 洛羽存储占位页（you+/index.md，返回 200 但复用 404 外观）：正式内容上线前禁止索引，
     // 避免搜索引擎收录一个内容为「404」的占位页（Bing 指南反对无实质内容的空壳页）
     'you+/index.md',
+  ]),
+  // 薄内容聚合页（标签云 / 时间线列表）：本身无独立信息量，收录后会在品牌词搜索中与首页竞争
+  //（实测 Bing 品牌词结果直接显示 /blogs/tags 而非首页）。统一 noindex 但保留 follow，
+  // 允许爬虫沿页面链接进入文章页；同时不进 sitemap.xml / llms.txt。新增同类薄页加进这里即可。
+  thinPages: new Set([
+    'blogs/tags.md',
+    'blogs/archives.md',
   ]),
   // 工单全部页面：详情页数据源目录 assets/tickets/ 与列表页目录 support/tickets/ 整目录排除，
   // 不进入 sitemap.xml / llms.txt，不注入 canonical / OG / JSON-LD，并在 robots.txt 生成 Disallow、页面输出 noindex
@@ -34,8 +42,9 @@ export const SEO_EXCLUDE_PAGES = {
 
 /** 判断某个页面相对路径是否命中排除规则 */
 export function isPageExcluded(relativePath) {
-  const { pages, dirs, patterns } = SEO_EXCLUDE_PAGES;
+  const { pages, thinPages, dirs, patterns } = SEO_EXCLUDE_PAGES;
   return pages.has(relativePath)
+    || thinPages.has(relativePath)
     || dirs.some((dir) => relativePath.startsWith(dir))
     || patterns.some((re) => re.test(relativePath));
 }
@@ -77,8 +86,13 @@ export function buildPageHeadTags({ seo, base, cleanUrls, pageData }) {
   const { siteUrl, siteName, siteDescription, siteLang, alternateNames, author, titleSuffix } = seo;
   const { relativePath, title, description, frontmatter, lastUpdated, isNotFound } = pageData;
   if (isNotFound || isPageExcluded(relativePath)) {
-    // 排除页：不注入 canonical / OG / JSON-LD，并显式禁止机器人索引与跟踪
-    return [['meta', { name: 'robots', content: 'noindex, nofollow' }]];
+    // 排除页：不注入 canonical / OG / JSON-LD，仅输出 robots 指令。
+    // 薄内容聚合页（thinPages）保留 follow，允许爬虫沿页面链接抓取正文；
+    // 其余排除页（隐私页 / 占位页 / 工单页）noindex, nofollow。
+    const robots = SEO_EXCLUDE_PAGES.thinPages?.has(relativePath)
+      ? 'noindex, follow'
+      : 'noindex, nofollow';
+    return [['meta', { name: 'robots', content: robots }]];
   }
 
   const url = resolvePageUrl(siteUrl, base, relativePath, cleanUrls);
@@ -221,11 +235,14 @@ export async function buildSeoArtifacts(siteConfig, { seo }) {
   await writeFile(join(outDir, 'robots.txt'), robots, 'utf-8');
 
   const blocks = [`# ${siteName}`, '', `> ${siteDescription}`, '', '## 站点页面', ''];
+  // IndexNow urlList 收集全站全部页面（含 noindex 薄页 / 排除页）：这类页面本次 robots
+  // 发生变化（新增 noindex），同样推送以促使 Bing 重抓后从索引移除；llms.txt 仍只收录可索引页面。
   const urlList = [];
   for (const page of pages) {
-    if (page === '404.md' || isPageExcluded(page)) continue;
+    if (page === '404.md') continue;
     const url = resolvePageUrl(siteUrl, site.base, page, cleanUrls);
     urlList.push(url);
+    if (isPageExcluded(page)) continue;
     const title =
       (await readPageTitle(srcDir, page)) ??
       (page.replace(/\.md$/, '') === 'index' ? siteName : readableTitle(page));
