@@ -25,8 +25,8 @@
   --ak-dark: #222;
   --ak-white: #fff;
   --ak-black: #000;
-  --ak-font-serif: "Rajdhani", "Noto Serif SC", "Noto Serif", "Songti SC", "STSong", "SimSun", serif;
-  --ak-font-sans: "Rajdhani", "Noto Sans SC", "Noto Sans", Roboto, "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
+  --ak-font-serif: "Rajdhani", "Noto Serif SC Variable", "Noto Serif SC", "Noto Serif", "Songti SC", "STSong", "SimSun", serif;
+  --ak-font-sans: "Rajdhani", "Noto Sans SC Variable", "Noto Sans SC", "Noto Sans", Roboto, "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
   /* 主命令字面：ak-ui 官方 token 规定为衬线（--ak-font-command: var(--ak-font-serif)），
    * 标题/命令统一使用；正文与控件用 --ak-font-sans */
   --ak-font-command: var(--ak-font-serif);
@@ -1658,7 +1658,7 @@ html .vpb-results-panel::before {
   }
 }
 
-/* 居中大百分比：用无衬线字体栈（Rajdhani → 系统 sans），避免 Google Fonts 未就绪时
+/* 居中大百分比：用无衬线字体栈（Rajdhani → 系统 sans），避免字体加载完成前
  * 回退到 --ak-font-serif 的中文衬线数字（宋体风格），数字保持 tabular-nums 等宽 */
 .page-loader__pct {
   font-family: var(--ak-font-sans);

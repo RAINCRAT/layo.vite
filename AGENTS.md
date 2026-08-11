@@ -79,7 +79,7 @@ layo.vite/                       # 仓库根（git 追踪文件全集，构建�
 6. 首页 Hero 标题宽度覆盖位于 `style.css` 中 `.VPHero .name` 的 `max-width` 规则。
 7. 提交信息遵循 Conventional Commits（见 `.trae/rules/git-commit-message.md`）：`<type>(<scope>): <subject>`，type 小写英文、subject 中文，一次提交一个核心改动。
 8. 构建产物与缓存已被 `.gitignore` 忽略，不要提交。忽略范围覆盖多目录构建场景：根目录（`.vitepress/dist`、`.vitepress/cache`、`.vitepress/.temp`）与子目录（`./blogs/.vitepress/`、`./docs/.vitepress/` 的 `dist`/`cache`）。
-9. 网络资源（Google 字体 Noto Sans/Serif SC 等）通过 `config.js` 的 `head` 配置注入；ak-ui 样式已由 npm 包在 `theme/index.js` 打包引入，**不走 CDN**（旧 jsDelivr 链接已失效）。
+9. **字体与外部资源**：字体已**本地化**——Noto Sans/Serif SC（可变 100–900）与 Rajdhani（300–700）经 `@fontsource-variable/*`、`@fontsource/rajdhani` 由 `theme/index.js` 打包引入（woff2 分片按 unicode-range 按需下载，替代原 config.js head 注入的 Google Fonts，消除 `display=swap` 跳字；许可证 SIL OFL-1.1 登记于 `docs/tpn.md`，新增字体包时同步登记）。其余第三方网络资源（Clarity 分析等）通过 `config.js` 的 `head` 配置注入；ak-ui 样式由 npm 包在 `theme/index.js` 打包引入，**不走 CDN**（旧 jsDelivr 链接已失效）。
 10. 每次完成任务后检查是否需要更新 `AGENTS.md`。
 11. **`theme/style.css` 区块约定**（新增样式按对应区块归类追加，不另起炉灶）：
     - 变量映射（顶部）：`--ak-*` 调色板/字体变量 → `--vp-c-*`（明/暗双主题）、`--vp-button-*`、`--vp-home-hero-*`、`--vp-custom-block-*`。新增全站风格化时优先改变量映射，避免硬编码颜色。
