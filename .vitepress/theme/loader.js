@@ -28,7 +28,7 @@ export const loaderHeadScript = `(function () {
   var SPRINT_MS = 1000;      // 尾段冲刺：进度进入 90+ 高位（主要资源已就绪）后最多等 1s 即强制收尾，不再死等 fonts 等慢尾节点
   var WATCHDOG_MS = 8000;    // 总超时：仍未完成（如主 JS 未水合）→ 失败态
   var W = { dom: 8, hydrate: 14, styles: 14, scripts: 10, images: 12, fonts: 8, load: 29 };
-  var CREEP_CAP = 95;        // 环境进度封顶：留出 load 权重收尾段；节点等待期进度持续爬升，避免完全静止
+  var CREEP_CAP = 88;        // 环境进度封顶：保守，页面未就绪时不虚报逼近完成
   var CREEP_STEP = 0.08;     // 每帧固定步进，环境进度匀速爬升防停滞
   var PROGRESS_RATE = 0.3;   // 距目标差距的追赶比例：差距大时快速逼近（响应节点跳变）
   var PROGRESS_MIN_STEP = 0.25; // 每帧最小推进：接近目标时仍匀速（避免越往后越慢，且保证能收敛到 100 触发收尾）
@@ -105,8 +105,9 @@ export const loaderHeadScript = `(function () {
       setProgress(100);
       finish();
     } else {
-      // 尾段冲刺：主要资源已就绪（90+）后启动限时收尾，避免 93% 附近死等慢尾节点（如 fonts）
-      if (nodeTotal >= 90 && !sprintTimer) {
+      // 尾段冲刺：主 JS 已水合（页面可交互）且主要资源已就绪（90+）后启动限时收尾，
+      // 避免 93% 附近死等慢尾节点（如 fonts）；hydrate 未完成时不冲刺（避免虚报）
+      if (nodeTotal >= 90 && completed.hydrate && !sprintTimer) {
         sprintTimer = setTimeout(function () {
           if (!finished) nodeTotal = 100;
         }, SPRINT_MS);
@@ -294,7 +295,7 @@ export const loaderHeadScript = `(function () {
       if (settled) return;
       addProgress(remaining * unit);
       settled = true;
-    }, 2000);
+    }, 2500);
     for (var i = 0; i < links.length; i++) (function (l) {
       if (l.sheet) return finishOne(false);
       l.addEventListener('load', function () { finishOne(false); }, { once: true });
@@ -340,7 +341,7 @@ export const loaderHeadScript = `(function () {
       if (settled) return;
       addProgress(remaining * unit);
       settled = true;
-    }, 2000);
+    }, 2500);
     for (var i = 0; i < imgs.length; i++) (function (img) {
       if (img.complete) return finishOne();
       img.addEventListener('load', finishOne, { once: true });
@@ -354,7 +355,7 @@ export const loaderHeadScript = `(function () {
   }
   function trackFonts() {
     if (!document.fonts) return complete('fonts');
-    fontTimer = setTimeout(function () { complete('fonts'); }, 2000);
+    fontTimer = setTimeout(function () { complete('fonts'); }, 2500);
     document.fonts.ready.then(function () {
       clearTimeout(fontTimer);
       complete('fonts');
@@ -388,8 +389,11 @@ export const loaderHeadScript = `(function () {
   // 断网直接失败
   if (typeof navigator !== 'undefined' && navigator.onLine === false) fail();
   else window.addEventListener('offline', function () { fail(); }, { once: true });
-  // 兜底：到时强制完成收尾；总超时仍未完成（如主 JS 未水合）→ 失败态
-  forceTimer = setTimeout(function () { if (!finished) nodeTotal = 100; }, FORCE_MS);
+  // 兜底：主 JS 已水合（页面核心就绪）才强制收尾；未水合则继续等待真实加载
+  // （防止"进度条消失但网站还没加载完"的虚报；主 JS 异常由 WATCHDOG 失败态兜底）
+  forceTimer = setTimeout(function () {
+    if (!finished && completed.hydrate) nodeTotal = 100;
+  }, FORCE_MS);
   watchdogTimer = setTimeout(function () { if (!finished) fail(); }, WATCHDOG_MS);
   raf = requestAnimationFrame(tick);
   // 水合汇报：Vue 组件（LoadingOverlay.vue）挂载后调用，标记 hydrate 节点完成
