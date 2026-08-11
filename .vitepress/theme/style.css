@@ -1828,10 +1828,45 @@ body::after {
   color: var(--ak-primary);
 }
 
+/* 回到顶部按钮：右下角 40px 方形图标钮，沿用导航图标按钮规范（描边 + hover 辉光） */
+.VPBackToTop {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 100;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--vp-c-border);
+  border-radius: 8px;
+  background-color: var(--vp-c-bg);
+  color: var(--vp-c-text-2);
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
 /* 导航返回顶部按钮 hover：primary 辉光 */
 .VPBackToTop:hover {
   border-color: var(--ak-primary) !important;
+  color: var(--vp-c-brand-1) !important;
   box-shadow: 0 0 12px var(--vp-c-shadow-brand) !important;
+}
+
+.VPBackToTop__icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* 工单页面（.is-tickets-page）：加宽内容区，容纳较宽的工单表格
+ * （默认 .VPDoc:not(.has-sidebar) .content 最大宽 752px / .container 最大宽 992px） */
+.is-tickets-page .VPDoc:not(.has-sidebar) .container {
+  max-width: 1440px !important;
+}
+
+.is-tickets-page .VPDoc:not(.has-sidebar) .content {
+  max-width: 1200px !important;
 }
 
 /* ============================ F. 导航折叠"更多"菜单 ============================ */
