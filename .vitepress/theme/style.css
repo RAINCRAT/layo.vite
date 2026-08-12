@@ -569,6 +569,43 @@ html .vpb-page-title {
   background-color: transparent;
 }
 
+/* 键值表窄容器堆叠（is-kv-stacked，由 theme/ticket-kv-stack.js 按容器宽度加类）：
+ * 两对列（字段名|值|字段名|值）在小容器下值列被挤压，改为上下两对（每对「字段名|值」
+ * 一行），整张表统一切换、不做行级拆分。用 grid 自动放置：每行 4 个单元格
+ * [字段A,值A,字段B,值B] 流式重排为两行两列，DOM 顺序不变 → 上方 nth-child(odd/even)
+ * 列样式（字段名列标签化高亮）自动保持。测量态（is-measuring）按内容固有宽度渲染，
+ * 量出两对列并排所需宽度。 */
+.is-tickets-page .vp-doc table.ticket-kv.is-measuring {
+  display: inline-table !important;
+  width: max-content !important;
+  max-width: none !important;
+}
+
+.is-tickets-page .vp-doc table.ticket-kv.is-kv-stacked,
+.is-tickets-page .vp-doc table.ticket-kv.is-kv-stacked thead,
+.is-tickets-page .vp-doc table.ticket-kv.is-kv-stacked tbody {
+  display: block;
+  width: 100%;
+}
+
+.is-tickets-page .vp-doc table.ticket-kv.is-kv-stacked tr {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+}
+
+/* 堆叠后 table 的 border-collapse 失效：cell 改为行分隔单线（去掉四边框，避免双线）；
+ * 空单元格分组行不显示分隔线（保留内边距作透明间距） */
+.is-tickets-page .vp-doc table.ticket-kv.is-kv-stacked th,
+.is-tickets-page .vp-doc table.ticket-kv.is-kv-stacked td {
+  border: 0;
+  border-bottom: 1px solid var(--vp-c-divider);
+  padding: 8px 12px;
+}
+
+.is-tickets-page .vp-doc table.ticket-kv.is-kv-stacked td:empty {
+  border-bottom: none;
+}
+
 /* 分隔线：对齐新版 .ak-divider 模块（两段式粗杠：左短 15% + 右长 50%，中间留白） */
 .vp-doc hr {
   display: flex;

@@ -13,6 +13,7 @@ import {
 import CookieConsentButton from './CookieConsentButton.vue';
 import BackToTop from './BackToTop.vue';
 import LoadingOverlay from './LoadingOverlay.vue';
+import { useKvTableStack } from './ticket-kv-stack.js';
 
 const { Layout } = DefaultTheme;
 const { frontmatter, page } = useData();
@@ -25,6 +26,8 @@ const is404StylePage = computed(() => page.isNotFound || route.path.startsWith('
 // 从而完整 Element Plus（JS/CSS）拆分为独立 chunk，仅工单详情页访问时加载，不再进主 bundle
 const isTicketsDetail = computed(() => route.path.startsWith('/assets/tickets/'));
 const TicketHeader = defineAsyncComponent(() => import('../../support/tickets/TicketHeader.vue'));
+// 工单详情页键值表窄容器堆叠（两对列 → 一对列，整表统一切换），内部自管理挂载/监听
+useKvTableStack();
 </script>
 
 <template>

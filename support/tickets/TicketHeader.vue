@@ -1,5 +1,5 @@
 <script setup>
-import { computed, provide, ref, onMounted, nextTick } from 'vue';
+import { computed, provide, ref, onMounted, onUnmounted, nextTick, watch } from 'vue';
 import { useData, useRoute, useRouter } from 'vitepress';
 import MarkdownIt from 'markdown-it';
 import { akInlinePlugin } from '../../.vitepress/theme/ak-inline.js';
@@ -49,20 +49,76 @@ function onBack() {
 const timelineEl = ref(null);
 const timelineMaxHeight = ref('');
 
+// —— 窄窗口堆叠判定 ——
+// 两列布局（时间戳 | 内容）在小宽度下会挤压正文列（内容被压到每行几个字）。
+// 当容器宽度不足以并排容纳「时间戳 + 间距 + 最长内容完整宽」时，整条记录上下两行：
+// 时间戳一行、内容独占整行（不再被挤压折行）。
+// 判定带冗余提前量：网络字体异步加载后字宽变化会让内容完整宽增大，临界宽度下若
+// 不留余量会出现"内容列最后几个字被折行"的难读态；提前量让换行发生在还有余量时，
+// 字体就绪后重新测量收敛（并排时内容列宽度 ≥ 内容完整宽 + 提前量，绝不折行）。
+const STACK_REDUNDANCY = 24; // 判定提前量（px）：接近临界即整体换行，防字体加载后补折最后一个字
+const TIMELINE_GAP = 14;     // 与 CSS 中 wrapper 的 gap 保持一致（判定需计入该间距）
+const timelineStacked = ref(false);
+
+function updateTimelineStack(el) {
+  const wrappers = el.querySelectorAll('.el-timeline-item__wrapper');
+  if (!wrappers.length) {
+    timelineStacked.value = false;
+    return;
+  }
+  // 临时按内容固有宽度（max-content）渲染，量出"完整一行"所需宽度；
+  // 时间戳为固定列宽（nowrap），直接量 offsetWidth
+  el.classList.add('is-measuring');
+  void el.offsetWidth; // 强制同步重排，使 max-content 生效
+  let tsW = 0, maxContentW = 0;
+  wrappers.forEach((w) => {
+    const ts = w.querySelector('.el-timeline-item__timestamp');
+    const c = w.querySelector('.el-timeline-item__content');
+    if (ts) tsW = Math.max(tsW, ts.offsetWidth);
+    if (c) maxContentW = Math.max(maxContentW, c.offsetWidth);
+  });
+  el.classList.remove('is-measuring');
+  // 放得下才保持两列并排；放不下（含冗余提前量）→ 上下两行
+  timelineStacked.value = el.clientWidth < tsW + TIMELINE_GAP + maxContentW + STACK_REDUNDANCY;
+}
+
+// 时间轴布局同步：7 条滚动上限 + 窄窗口堆叠判定（均依赖真实字宽，字体就绪后需重测）
+function syncTimelineLayout(el) {
+  if (!el) return;
+  const items = el.querySelectorAll('.el-timeline-item');
+  if (items.length > 7) {
+    let h = 0;
+    for (let i = 0; i < 7; i++) h += items[i].getBoundingClientRect().height;
+    // 加上 ul 自身上下 padding，保证前 7 条完整可见、第 8 条正好裁出滚动区
+    const cs = getComputedStyle(el);
+    h += (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0);
+    timelineMaxHeight.value = `${Math.ceil(h)}px`;
+  } else {
+    timelineMaxHeight.value = '';
+  }
+  updateTimelineStack(el);
+}
+
+function onResize() {
+  syncTimelineLayout(timelineEl.value?.$el);
+}
+
 onMounted(async () => {
   await nextTick();
   // el-timeline 是组件，ref 拿到的是组件实例；$el 才是渲染出的 ul 根元素
   const el = timelineEl.value?.$el;
   if (!el) return;
-  const items = el.querySelectorAll('.el-timeline-item');
-  if (items.length <= 7) return;
-  let h = 0;
-  for (let i = 0; i < 7; i++) h += items[i].getBoundingClientRect().height;
-  // 加上 ul 自身上下 padding，保证前 7 条完整可见、第 8 条正好裁出滚动区
-  const cs = getComputedStyle(el);
-  h += (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0);
-  timelineMaxHeight.value = `${Math.ceil(h)}px`;
+  syncTimelineLayout(el);
+  // 网络字体异步加载后字宽变化：就绪后重测一次（滚动上限与堆叠判定都依赖真实字宽）
+  document.fonts?.ready.then(() => syncTimelineLayout(el));
+  window.addEventListener('resize', onResize, { passive: true });
 });
+onUnmounted(() => window.removeEventListener('resize', onResize));
+// 切换工单（同 /assets/tickets/ 前缀路由不销毁组件）：DOM 重建后按新内容重测
+watch(
+  () => route.path,
+  () => nextTick().then(() => syncTimelineLayout(timelineEl.value?.$el))
+);
 </script>
 
 <template>
@@ -84,13 +140,9 @@ onMounted(async () => {
       <el-descriptions-item label="创建时间">{{ frontmatter.createdAt }}</el-descriptions-item>
     </el-descriptions>
 
-    <el-timeline
-      ref="timelineEl"
-      v-if="frontmatter.updates?.length"
-      class="ticket-header__timeline"
-      :class="{ 'is-done': ['已完成', '已关闭'].includes(frontmatter.status) }"
-      :style="timelineMaxHeight ? { maxHeight: timelineMaxHeight, overflowY: 'auto' } : undefined"
-    >
+    <el-timeline ref="timelineEl" v-if="frontmatter.updates?.length" class="ticket-header__timeline"
+      :class="{ 'is-done': ['已完成', '已关闭'].includes(frontmatter.status), 'is-stacked': timelineStacked }"
+      :style="timelineMaxHeight ? { maxHeight: timelineMaxHeight, overflowY: 'auto' } : undefined">
       <el-timeline-item v-for="u in frontmatter.updates" :key="u.time" :timestamp="u.time">
         <span v-html="renderUpdate(u.text)" />
       </el-timeline-item>
@@ -143,8 +195,8 @@ onMounted(async () => {
   border-left: 3px solid var(--ak-primary);
   border-radius: 0;
   box-shadow: 0 2px 6px var(--vp-c-shadow);
-  /* 超过 7 条时内部滚动（上限由脚本按前 7 条实测高度设置），滚动到边界不带动整页 */
-  overscroll-behavior: contain;
+  /* 注意：不要加 overscroll-behavior: contain/none——滚动到时间轴边界时它会吞掉滚动链，
+   * 导致边界处继续滑动"一动不动"（页面也不跟着滚），须保持默认 auto 让滚动自然过渡到页面 */
   /* 节点/尾线基础色统一为 ak 蓝（Element Plus 通过该变量取色） */
   --el-timeline-node-color: var(--ak-primary);
 }
@@ -236,10 +288,14 @@ onMounted(async () => {
 
 .ticket-header__timeline :deep(.el-timeline-item__timestamp) {
   flex: 0 0 auto;
-  order: -1; /* placement=bottom 时时间戳在 DOM 中位于内容之后，强制排到最左 */
-  min-width: 8.4em; /* 固定列宽（13 字符等宽时间码，约 8.4em），内容列稳定对齐 */
-  margin-top: 0; /* 消除 is-bottom 的时间戳下移间距 */
-  font-family: var(--ak-font-pixel); /* 终端等宽字体栈（设备自带，无需网络加载，许可证无忧） */
+  order: -1;
+  /* placement=bottom 时时间戳在 DOM 中位于内容之后，强制排到最左 */
+  min-width: 8.4em;
+  /* 固定列宽（13 字符等宽时间码，约 8.4em），内容列稳定对齐 */
+  margin-top: 0;
+  /* 消除 is-bottom 的时间戳下移间距 */
+  font-family: var(--ak-font-pixel);
+  /* 终端等宽字体栈（设备自带，无需网络加载，许可证无忧） */
   font-size: 14px;
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -258,6 +314,28 @@ onMounted(async () => {
   min-width: 0;
   color: var(--vp-c-text-1);
   line-height: 1.6;
+}
+
+/* 测量态（窄窗口堆叠判定用）：内容按固有宽度（max-content）渲染并取消拉伸，
+ * 量出"完整一行"所需宽度；时间戳固定列宽不受影响 */
+.ticket-header__timeline.is-measuring :deep(.el-timeline-item__content) {
+  flex: 0 0 auto !important;
+  width: max-content !important;
+  min-width: max-content !important;
+  max-width: none !important;
+}
+
+/* 窄窗口堆叠：容器放不下「时间戳 + 间距 + 内容完整一行 + 冗余」时，内容换到第二行
+ * 独占整行（不再被时间戳挤压），时间戳单独一行 */
+.ticket-header__timeline.is-stacked :deep(.el-timeline-item__wrapper) {
+  flex-wrap: wrap;
+  row-gap: 4px;
+  /* 上下两行间距收紧；横向 gap 保留原值 */
+}
+
+.ticket-header__timeline.is-stacked :deep(.el-timeline-item__content) {
+  flex: 1 1 100%;
+  /* 独占整行 */
 }
 
 /* 行内代码（配合 Markdown 渲染的 `code`）：字号继承普通文本；实蓝描边 + 蓝底 + 加粗 + 辉光，强调清晰 */
