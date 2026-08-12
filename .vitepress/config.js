@@ -3,11 +3,11 @@ import tailwindcss from '@tailwindcss/vite';
 import { processData } from '@chunge16/vitepress-blogs-theme/config';
 import { zhCN } from 'date-fns/locale';
 import path from 'node:path';
-import { ensurePostDates, firstCommitDate } from './theme/post-date.js';
 import { buildPageHeadTags, buildSeoArtifacts, transformSitemapItems, isPageExcluded } from './seo.js';
 import { createSeoConfig, expandNewlines } from './seo-config.js';
 import { loaderHeadScript } from './theme/loader.js';
 import { akInlinePlugin } from './theme/ak-inline.js';
+import { ticketKvTablePlugin } from './theme/ticket-kv-table.js';
 
 // 站点配置唯一来源：.env（VITE_SITE_* 站点基础、VITE_SEO_* SEO 独立覆盖），代码不硬编码
 const env = loadEnv(process.env.NODE_ENV ?? 'production', process.cwd(), '');
@@ -18,12 +18,9 @@ const siteName = env.VITE_SITE_NAME ?? '';
 const siteDescription = expandNewlines(env.VITE_SITE_DESCRIPTION ?? '');
 const siteLang = env.VITE_SITE_LANG ?? 'zh-CN';
 const themeColor = env.VITE_SITE_THEME_COLOR ?? '#0e86b8';
-// 博客文章目录（相对 srcDir，单源：themeConfig.blog.postsPath 与 ensurePostDates 共用）
+// 博客文章目录（相对 srcDir，themeConfig.blog.postsPath 使用）；
+// 文章发布日期不再自动派生（已屏蔽 git 派生，见约定 15），由 frontmatter 手动硬编
 const blogPostsPath = 'blogs/posts';
-
-// 构建启动时自动补写文章 frontmatter date（缺失时按 git 首次提交时间，见 theme/post-date.js），
-// 须在 VPB 内容加载器读取文件之前执行，列表/文章页日期才能正确
-ensurePostDates(process.cwd(), blogPostsPath);
 
 // SEO 配置独立于 seo-config.js：默认沿用上面的站点基础配置，可被 VITE_SEO_* 覆盖
 const seo = createSeoConfig({ siteUrl, siteName, siteDescription, siteLang }, env);
@@ -83,10 +80,12 @@ export default defineConfig({
     : {}),
 
   // 全站内容标记语法（见 theme/ak-inline.js）：[[色:文字]] 不同颜色强调、||文字|| 色块悬停显示。
-  // 与工单时间线 text（TicketHeader.vue 的独立 MarkdownIt）共用同一插件，两端语法一致
+  // 与工单时间线 text（TicketHeader.vue 的独立 MarkdownIt）共用同一插件，两端语法一致；
+  // ticket-kv-table.js：工单键值表列高亮开关（识别「字段名 | 值」布局自动加 ticket-kv 类，见约定 16）
   markdown: {
     config(md) {
       md.use(akInlinePlugin);
+      md.use(ticketKvTablePlugin);
     },
   },
 
@@ -230,15 +229,9 @@ export default defineConfig({
     },
   },
 
-  // 为 posts/authors 页面标记博客布局（文章页/作者页的插槽注入依据）
+  // 为 posts/authors 页面标记博客布局（文章页/作者页的插槽注入依据）；
+  // 文章日期由 frontmatter 手动硬编，此处不再做任何 date 派生（见约定 15）
   async transformPageData(pageData, ctx) {
-    // 发布日期自动派生：文章页未显式写 frontmatter date 时，取 git 首次提交时间，
-    // 供 VPB「Published on」与 JSON-LD datePublished 使用（不硬编码；git 不可用时回退原样）
-    const postsPath = ctx?.siteConfig?.site?.themeConfig?.blog?.postsPath ?? 'blogs/posts';
-    if (!pageData.frontmatter.date && pageData.relativePath.startsWith(`${postsPath}/`)) {
-      const date = firstCommitDate(ctx.siteConfig.srcDir, pageData.relativePath);
-      if (date) pageData.frontmatter.date = date;
-    }
     await processData(pageData, ctx);
   },
 });

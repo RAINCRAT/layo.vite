@@ -539,6 +539,36 @@ html .vpb-page-title {
   background-color: var(--vp-c-bg-soft);
 }
 
+/* 工单详情页键值表（「字段名 | 值 | 字段名 | 值」布局，开关类 .ticket-kv）：
+ * 默认（无 .ticket-kv）保持 VitePress 默认表格样式；命中键值表后由 markdown-it 插件
+ * （theme/ticket-kv-table.js）自动加类开启：首行不做整行深蓝表头（首行同时含字段名与值，
+ * 整行涂蓝不科学），改为字段名列（第 1、3 列）标签化淡底高亮、值列正常显示；
+ * 移除斑马纹与整行 hover 高亮避免与列高亮叠加；空单元格行（表格内分组间距）不显示色块。
+ * 以 .is-tickets-page 限定，不影响普通文档表格。 */
+.is-tickets-page .vp-doc table.ticket-kv th {
+  background-color: transparent;
+  color: var(--vp-c-text-1);
+  font-weight: inherit;
+  text-align: left;
+}
+
+.is-tickets-page .vp-doc table.ticket-kv tbody tr:nth-child(2n),
+.is-tickets-page .vp-doc table.ticket-kv tbody tr:hover {
+  background-color: transparent !important;
+}
+
+.is-tickets-page .vp-doc table.ticket-kv th:nth-child(odd),
+.is-tickets-page .vp-doc table.ticket-kv td:nth-child(odd) {
+  background-color: var(--vp-c-bg-soft);
+  color: var(--vp-c-text-2);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.is-tickets-page .vp-doc table.ticket-kv td:empty {
+  background-color: transparent;
+}
+
 /* 分隔线：对齐新版 .ak-divider 模块（两段式粗杠：左短 15% + 右长 50%，中间留白） */
 .vp-doc hr {
   display: flex;

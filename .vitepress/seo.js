@@ -96,14 +96,18 @@ export function buildPageHeadTags({ seo, base, cleanUrls, pageData }) {
   }
 
   const url = resolvePageUrl(siteUrl, base, relativePath, cleanUrls);
-  const desc = description || siteDescription;
+  // og:description / description 优先级：frontmatter 显式 og:description > 页面 description > 站点描述
+  const desc = frontmatter?.['og:description'] || description || siteDescription;
   const isRootHome = relativePath === 'index.md';
   const isIndexPage = isRootHome || /\/index\.md$/.test(relativePath);
   // pageData.title 为空（如 home 布局页 blogs/index.md 无 frontmatter title）时回退为站点名，
   // 避免 og:title / JSON-LD name 输出「 | 后缀」残缺标题
   const pageTitle = title || siteName;
-  // og:title 后缀独立于 SEO 站名（VITE_SEO_TITLE_SUFFIX，默认回退站名），与 <title> 模板保持一致
-  const ogTitle = pageTitle.includes(siteName) ? pageTitle : `${pageTitle} | ${titleSuffix}`;
+  // og:title 优先级：frontmatter 显式 og:title 优先作为标题基底；
+  // 统一规则——基底（og:title 或 pageTitle）不含站点名时一律拼「| 标题后缀」（与 <title> 模板一致），
+  // 保证社交分享/抓取方看到的 og:title 始终带「泠域存储」品牌后缀
+  const ogBase = frontmatter?.['og:title'] || pageTitle;
+  const ogTitle = ogBase.includes(siteName) ? ogBase : `${ogBase} | ${titleSuffix}`;
 
   const tags = [
     ['link', { rel: 'canonical', href: url }],

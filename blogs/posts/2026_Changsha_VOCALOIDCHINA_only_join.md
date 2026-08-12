@@ -5,6 +5,7 @@ title: |-
   长沙·湘韵四方
   中文虚拟歌姬同人only展1.0
   参展确认
+og:title: 长沙湘韵四方中术o展1.0参展决定
 author: Aibeto
 tags:
   - VOCALOID
