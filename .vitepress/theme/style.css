@@ -1759,7 +1759,7 @@ html .vpb-results-panel::before {
 
 /* ---- G8. 列表页终端标题行（纯 CSS 伪元素，呼应详情页时间轴 "// 事项碎片"） ---- */
 .is-tickets-page .ticket-demo::before {
-  content: "// WE DO THE DIRTY WORK. WE KNOW THE SECRETS.";
+  content: "// WE KNOW THE SECRETS.";
   display: block;
   margin-bottom: 10px;
   font-family: var(--ak-font-mono, monospace);

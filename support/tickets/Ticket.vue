@@ -140,7 +140,7 @@ function onViewDetail(row) {
         <el-option v-for="s in Object.keys(statusTag)" :key="s" :label="s" :value="s" />
       </el-select>
       <el-button class="ticket-demo__reset" @click="onReset">重置</el-button>
-      <el-button type="primary" class="ticket-demo__create" @click="onCreate">新建工单</el-button>
+      <!-- <el-button type="primary" class="ticket-demo__create" @click="onCreate">新建工单</el-button> -->
     </div>
 
     <el-table ref="tableRef" :data="pagedTickets" stripe empty-text="暂无匹配的工单">

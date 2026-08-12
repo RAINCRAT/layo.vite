@@ -78,7 +78,7 @@ onMounted(async () => {
       </el-tag>
     </div>
 
-    <el-descriptions :column="2" border class="ticket-header__meta">
+    <el-descriptions :column="1" border class="ticket-header__meta">
       <el-descriptions-item label="工单号">{{ frontmatter.id }}</el-descriptions-item>
       <el-descriptions-item label="来源">{{ frontmatter.reporter }}</el-descriptions-item>
       <el-descriptions-item label="创建时间">{{ frontmatter.createdAt }}</el-descriptions-item>

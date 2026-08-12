@@ -13,14 +13,24 @@
  *   10ms 限流逐行打印（模拟终端）；
  * - 失败兜底：断网 / 同源关键样式加载失败 / 总超时（含主 JS 未水合的极端情况）
  *   → "刷新重试"错误态，替代原 config.js 中的 8s 静态看门狗；
+ *   失败判定带后台挂起：定时器/rAF 被节流的后台标签页或休眠唤醒不立即失败，
+ *   回前台时按真实状态（水合完成→收尾，未水合→失败）重新评估，杜绝误报；
+ *   断网采用短确认窗口 + online 回撤，过滤休眠唤醒/网络切换的瞬时 offline；
  * - 水合汇报：Vue 组件（LoadingOverlay.vue）挂载后调用 __LAYO_BOOTED__()，
  *   标记 hydrate 节点完成；
- * - 收尾：给 <html> 加 is-loaded 触发内容分步入场，遮罩淡出移除。
+ * - 收尾：给 <html> 加 is-loaded 触发内容分步入场，遮罩淡出移除；
+ *   淡出前确认主题 CSS 已实际应用（preload 的 load 事件早于 CSS 解析/应用），
+ *   避免样式晚到时 is-loaded 入场动画重放造成内容闪现；
+ * - 防重入：window.__LAYO_INITED__ 持久标记跨 SPA 路由生效，任何原因导致的
+ *   脚本重复执行都会被拦截（getElementById 只能挡住遮罩尚在的情况）。
  */
 
 export const loaderHeadScript = `(function () {
   'use strict';
-  if (document.getElementById('layo-loader')) return;
+  // 防重入：遮罩只应创建一次。window 级持久标记跨 SPA 路由有效，
+  // getElementById 仅能挡住遮罩尚在的情况；重复执行（如 head 重注入）在此返回
+  if (document.getElementById('layo-loader') || window.__LAYO_INITED__) return;
+  window.__LAYO_INITED__ = true;
 
   // ---- 常量 ----
   var BASE = 5;              // 起始进度（首帧即有可见爬升）
@@ -37,9 +47,11 @@ export const loaderHeadScript = `(function () {
   var SLICE_MS = 150;
   var MAX_LOGS = 256;
   var LOG_MS = 10;           // 日志打印限流：每 10ms 最多输出一条
+  var OFFLINE_CONFIRM_MS = 1500; // 离线确认窗口：休眠唤醒/网络切换的瞬时 offline 不立即失败
 
   var nodeTotal = BASE, creep = BASE, progress = BASE;
   var finished = false;
+  var failQueued = false, offlinePending = false;
   var raf = 0, forceTimer = 0, watchdogTimer = 0, sliceTimer = 0, sprintTimer = 0;
   var fontTimer = 0, stylesTimer = 0, scriptsTimer = 0, imagesTimer = 0;
   var logQueue = [], logTimer = 0, logSeq = 0;
@@ -109,7 +121,12 @@ export const loaderHeadScript = `(function () {
       // 避免 93% 附近死等慢尾节点（如 fonts）；hydrate 未完成时不冲刺（避免虚报）
       if (nodeTotal >= 90 && completed.hydrate && !sprintTimer) {
         sprintTimer = setTimeout(function () {
-          if (!finished) nodeTotal = 100;
+          // 直接收尾，不再依赖 rAF tick（后台/休眠时 rAF 暂停，否则进度卡高位只能等兜底超时）
+          if (!finished) {
+            nodeTotal = 100;
+            setProgress(100);
+            finish();
+          }
         }, SPRINT_MS);
       }
       raf = requestAnimationFrame(tick);
@@ -127,19 +144,46 @@ export const loaderHeadScript = `(function () {
     clearInterval(sliceTimer);
     clearTimeout(logTimer);
   }
+  // 主题 CSS 是否已实际应用：preload→stylesheet 的 load 事件只代表资源下载完成，
+  // CSS 解析/应用在其后异步发生；扫描样式表确认 .page-loader 规则已就绪，避免在
+  // 未应用样式时淡出遮罩（is-loaded 入场动画晚到重放 → 内容闪现/二次加载观感）
+  function themeCssApplied() {
+    try {
+      var sheets = document.styleSheets;
+      for (var i = 0; i < sheets.length; i++) {
+        var rules = sheets[i].cssRules;
+        if (!rules) continue;
+        for (var j = 0; j < rules.length; j++) {
+          var sel = rules[j].selectorText;
+          if (sel && sel.indexOf('.page-loader') !== -1) return true;
+        }
+      }
+    } catch (e) { /* 跨域/受限样式表不可读时忽略 */ }
+    return false;
+  }
   function finish() {
     if (finished) return;
     finished = true;
     stopTimers();
-    // 进度已到 100% 即收尾：立即触发内容分步入场并淡出遮罩（淡出 0.15s，100% 后基本瞬隐）
-    document.documentElement.classList.add('is-loaded');
-    root.style.transition = 'opacity .15s ease';
-    root.style.opacity = '0';
-    setTimeout(function () {
-      if (root.parentNode) root.parentNode.removeChild(root);
-    }, 180);
+    var out = function () {
+      // 进度已到 100% 即收尾：立即触发内容分步入场并淡出遮罩（淡出 0.15s，100% 后基本瞬隐）
+      document.documentElement.classList.add('is-loaded');
+      root.style.transition = 'opacity .15s ease';
+      root.style.opacity = '0';
+      setTimeout(function () {
+        if (root.parentNode) root.parentNode.removeChild(root);
+      }, 180);
+    };
+    if (themeCssApplied()) { out(); return; }
+    // 样式晚于 load 事件应用（慢网/大 CSS），轮询至多 0.8s 再淡出，消除"闪一下"
+    var waited = 0;
+    (function waitCss() {
+      if (themeCssApplied() || waited >= 800) { out(); return; }
+      waited += 50;
+      setTimeout(waitCss, 50);
+    })();
   }
-  function fail() {
+  function doFail() {
     if (finished) return;
     finished = true;
     stopTimers();
@@ -149,6 +193,23 @@ export const loaderHeadScript = `(function () {
       '<p class="page-loader__fail-title" style="margin:0;font-size:24px;font-weight:700;letter-spacing:.18em;color:var(--ak-accent,#f6540e)">神经网络连接中断</p>' +
       '<p class="page-loader__fail-hint" style="margin:0;font-size:13px;letter-spacing:.12em;color:var(--vp-c-text-3,#8b94a6)">网络或资源异常，请检查连接后重试</p>' +
       '<button type="button" class="page-loader__retry" style="margin-top:6px;padding:8px 28px;border:1px solid var(--ak-accent,#f6540e);background-color:transparent;color:var(--ak-accent,#f6540e);font-size:14px;letter-spacing:.18em;cursor:pointer" onclick="window.location.reload()">重试</button></div>';
+  }
+  function fail() {
+    if (finished) return;
+    // 后台/休眠时定时器与 rAF 被节流/暂停，恢复时网络与资源可能已就绪；
+    // 先挂起失败判定，回到前台再评估，避免"休眠唤醒/切后台误报失败"
+    if (document.hidden) { failQueued = true; return; }
+    doFail();
+  }
+  function settle() {
+    // 收尾评估：主 JS 已水合（页面可交互）→ 直接收尾；否则走失败（fail 内部处理后台挂起）
+    if (completed.hydrate) {
+      nodeTotal = 100;
+      setProgress(100);
+      finish();
+    } else {
+      fail();
+    }
   }
 
   // ---- 背景加载日志：fetch/XHR（方法/状态码）+ 资源采样（CSS/JS/IMG/FONT），每行含相对时间/耗时/传输大小 ----
@@ -398,15 +459,44 @@ export const loaderHeadScript = `(function () {
   trackFonts();
   trackLoad();
   trackResources();
-  // 断网直接失败
-  if (typeof navigator !== 'undefined' && navigator.onLine === false) fail();
-  else window.addEventListener('offline', function () { fail(); }, { once: true });
-  // 兜底：主 JS 已水合（页面核心就绪）才强制收尾；未水合则继续等待真实加载
-  // （防止"进度条消失但网站还没加载完"的虚报；主 JS 异常由 WATCHDOG 失败态兜底）
+  // 断网 / 瞬时离线：休眠唤醒与网络切换会触发瞬时 offline，用确认窗口 + online
+  // 回撤过滤；确认仍离线再按 settle 评估（水合完成则收尾，否则失败）
+  var offlineConfirm = function () {
+    setTimeout(function () {
+      if (!offlinePending || finished || navigator.onLine !== false) return;
+      settle();
+    }, OFFLINE_CONFIRM_MS);
+  };
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    offlinePending = true;
+    offlineConfirm();
+  }
+  window.addEventListener('online', function () { offlinePending = false; });
+  window.addEventListener('offline', function () { offlinePending = true; offlineConfirm(); });
+  // 回前台评估：后台挂起的失败判定 → 按真实状态收尾或失败；
+  // 主 JS 已水合但 rAF 曾被后台暂停 → 直接收尾（避免遮罩不退/被节流定时器误判失败）
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) return;
+    if (failQueued) {
+      failQueued = false;
+      settle();
+    } else if (!finished && completed.hydrate) {
+      nodeTotal = 100;
+      setProgress(100);
+      finish();
+    }
+  });
+  // 兜底：主 JS 已水合（页面核心就绪）直接收尾——进度已达 100% 但 rAF 在后台
+  // 暂停时无法经 tick 收尾，定时器恢复后必须自行完成，防止被 WATCHDOG 误判失败
   forceTimer = setTimeout(function () {
-    if (!finished && completed.hydrate) nodeTotal = 100;
+    if (!finished && completed.hydrate) {
+      nodeTotal = 100;
+      setProgress(100);
+      finish();
+    }
   }, FORCE_MS);
-  watchdogTimer = setTimeout(function () { if (!finished) fail(); }, WATCHDOG_MS);
+  // 总超时：未完成 → 水合完成则收尾，否则失败（fail 内部后台自动挂起，回前台再判定）
+  watchdogTimer = setTimeout(function () { if (!finished) settle(); }, WATCHDOG_MS);
   raf = requestAnimationFrame(tick);
   // 水合汇报：Vue 组件（LoadingOverlay.vue）挂载后调用，标记 hydrate 节点完成
   window.__LAYO_BOOTED__ = function () { complete('hydrate'); };
