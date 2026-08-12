@@ -45,6 +45,7 @@ layo.vite/                       # 仓库根（git 追踪文件全集，构建�
 │       ├── CookieConsentButton.vue # 导航栏右上角手动弹出 Cookie 偏好设置按钮（nav-bar-content-after 插槽引入）
 │       ├── BackToTop.vue        # 全站右下角回到顶部按钮（VPBackToTop 类，基础样式见 style.css）
 │       ├── loader.js            # 首屏加载遮罩独立内联脚本生成器（config.js head 注入，随 HTML 解析执行，不依赖主 JS 与主题 CSS）
+│       ├── post-date.js         # 文章发布日期自动派生工具：firstCommitDate（git 首次提交时间）+ ensurePostDates（构建启动时自动补写缺失的 frontmatter date，见约定 15）
 │       └── LoadingOverlay.vue   # 路由切换顶部细进度条 + 水合汇报（__LAYO_BOOTED__）
 ├── blogs/                       # 博客站
 │   ├── index.md                 # VPBHome 文章列表
@@ -107,6 +108,7 @@ layo.vite/                       # 仓库根（git 追踪文件全集，构建�
     - 组件：`<VPBHome />`、`<VPBArchives />`、`<VPBTags />` 在 `theme/index.js` 的 `enhanceApp` 注册，博客插槽由 `theme/Layout.vue` 组合。
     - 样式覆盖：VPB 自带 Tailwind preflight、品牌色、背景与字体，且样式表加载顺序靠后——覆盖必须在 `style.css` 中用 `!important` 或 `html` 前缀提高特异性；`--vpb-*` 变量映射集中在 `style.css` 顶部（带 `!important`），body 网格背景与标题字体覆盖集中在 "html body" 及其后 VPB 统一区块。注意 vpb 的 `:root` 还会用旧名 `--vp-c-brand*`（绿色系）覆盖 tip/按钮品牌变量，需在"VPB 博客组件残留默认样式 ak 化"子区块用 `html:root` 重声明（特异性高于 `:root`）拉回。
     - 内容：新增博客文章放 `blogs/posts/`，作者页放 `blogs/authors/`。
+    - 文章发布日期自动派生：**不要在 md frontmatter 手写 `date`**——`config.js` 模块加载时调用 `ensurePostDates`（`theme/post-date.js`）扫描 `blogs/posts/`，为缺失 `date` 的文章按 **git 首次提交时间**（`git log --diff-filter=A`）自动写回 frontmatter（幂等，git 不可用跳过）；首次构建后文件会多出自动生成的 `date` 行，可提交固化。VPB 的 `posts.data.js`（content loader）直接读 md 原始 frontmatter、不经过 `transformPageData`，故必须构建前写入文件，列表/文章页日期才正确；`transformPageData` 里的 `firstCommitDate` 兜底仅保障 SEO（JSON-LD `datePublished`）。新增文章后勿删该自动生成的 `date` 行。
     - VPBHome 本地覆盖：`theme/VPBHome.vue`（在 `theme/index.js` 替换原包注册），原版把博客大标题渲染为 `<h2>` 致 `/blogs/` 页面缺 `<h1>`，副本改为 `<h1>`、样式类不变；升级 vpb 时注意保持该副本同步（VPBArchives/VPBTags 同有此 h2 问题，暂未覆盖）。
 16. **Element Plus 仅限工单系统且按需加载**：
     - 位置：工单相关页面放 `support/tickets/`（列表 `Ticket.vue`、详情页头部 `TicketHeader.vue`、按需样式入口 `element-plus-styles.js`）。

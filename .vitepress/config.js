@@ -2,6 +2,8 @@ import { defineConfig, loadEnv } from 'vitepress';
 import tailwindcss from '@tailwindcss/vite';
 import { processData } from '@chunge16/vitepress-blogs-theme/config';
 import { zhCN } from 'date-fns/locale';
+import path from 'node:path';
+import { ensurePostDates, firstCommitDate } from './theme/post-date.js';
 import { buildPageHeadTags, buildSeoArtifacts, transformSitemapItems, isPageExcluded } from './seo.js';
 import { createSeoConfig, expandNewlines } from './seo-config.js';
 import { loaderHeadScript } from './theme/loader.js';
@@ -15,6 +17,12 @@ const siteName = env.VITE_SITE_NAME ?? '';
 const siteDescription = expandNewlines(env.VITE_SITE_DESCRIPTION ?? '');
 const siteLang = env.VITE_SITE_LANG ?? 'zh-CN';
 const themeColor = env.VITE_SITE_THEME_COLOR ?? '#0e86b8';
+// 博客文章目录（相对 srcDir，单源：themeConfig.blog.postsPath 与 ensurePostDates 共用）
+const blogPostsPath = 'blogs/posts';
+
+// 构建启动时自动补写文章 frontmatter date（缺失时按 git 首次提交时间，见 theme/post-date.js），
+// 须在 VPB 内容加载器读取文件之前执行，列表/文章页日期才能正确
+ensurePostDates(process.cwd(), blogPostsPath);
 
 // SEO 配置独立于 seo-config.js：默认沿用上面的站点基础配置，可被 VITE_SEO_* 覆盖
 const seo = createSeoConfig({ siteUrl, siteName, siteDescription, siteLang }, env);
@@ -172,7 +180,7 @@ export default defineConfig({
       title: siteName,
       description: siteDescription,
       path: '/blogs',
-      postsPath: 'blogs/posts',
+      postsPath: blogPostsPath,
       authorsPath: 'blogs/authors',
       tagsPath: '/blogs/tags',
       defaultAuthor: seo.author,
@@ -214,6 +222,13 @@ export default defineConfig({
 
   // 为 posts/authors 页面标记博客布局（文章页/作者页的插槽注入依据）
   async transformPageData(pageData, ctx) {
+    // 发布日期自动派生：文章页未显式写 frontmatter date 时，取 git 首次提交时间，
+    // 供 VPB「Published on」与 JSON-LD datePublished 使用（不硬编码；git 不可用时回退原样）
+    const postsPath = ctx?.siteConfig?.site?.themeConfig?.blog?.postsPath ?? 'blogs/posts';
+    if (!pageData.frontmatter.date && pageData.relativePath.startsWith(`${postsPath}/`)) {
+      const date = firstCommitDate(ctx.siteConfig.srcDir, pageData.relativePath);
+      if (date) pageData.frontmatter.date = date;
+    }
     await processData(pageData, ctx);
   },
 });

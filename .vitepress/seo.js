@@ -99,8 +99,9 @@ export function buildPageHeadTags({ seo, base, cleanUrls, pageData }) {
   const desc = description || siteDescription;
   const isRootHome = relativePath === 'index.md';
   const isIndexPage = isRootHome || /\/index\.md$/.test(relativePath);
-  // home 布局页 pageData.title 为空，回退为站点名
-  const pageTitle = (isRootHome && !title) ? siteName : title;
+  // pageData.title 为空（如 home 布局页 blogs/index.md 无 frontmatter title）时回退为站点名，
+  // 避免 og:title / JSON-LD name 输出「 | 后缀」残缺标题
+  const pageTitle = title || siteName;
   // og:title 后缀独立于 SEO 站名（VITE_SEO_TITLE_SUFFIX，默认回退站名），与 <title> 模板保持一致
   const ogTitle = pageTitle.includes(siteName) ? pageTitle : `${pageTitle} | ${titleSuffix}`;
 
