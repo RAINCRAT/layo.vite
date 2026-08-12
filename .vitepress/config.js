@@ -7,6 +7,7 @@ import { ensurePostDates, firstCommitDate } from './theme/post-date.js';
 import { buildPageHeadTags, buildSeoArtifacts, transformSitemapItems, isPageExcluded } from './seo.js';
 import { createSeoConfig, expandNewlines } from './seo-config.js';
 import { loaderHeadScript } from './theme/loader.js';
+import { akInlinePlugin } from './theme/ak-inline.js';
 
 // 站点配置唯一来源：.env（VITE_SITE_* 站点基础、VITE_SEO_* SEO 独立覆盖），代码不硬编码
 const env = loadEnv(process.env.NODE_ENV ?? 'production', process.cwd(), '');
@@ -80,6 +81,14 @@ export default defineConfig({
       },
     }
     : {}),
+
+  // 全站内容标记语法（见 theme/ak-inline.js）：[[色:文字]] 不同颜色强调、||文字|| 色块悬停显示。
+  // 与工单时间线 text（TicketHeader.vue 的独立 MarkdownIt）共用同一插件，两端语法一致
+  markdown: {
+    config(md) {
+      md.use(akInlinePlugin);
+    },
+  },
 
   // 首屏性能：VitePress 会把全部 CSS 合并进唯一全局 style.css（数百 KB），并以
   // render-blocking 的 `<link rel="preload stylesheet" as="style">` 注入 head——

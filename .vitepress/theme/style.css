@@ -110,6 +110,12 @@
   --ak-density-panel-padding: 1rem;
 }
 
+/* 内容标记色块底色透明度（经 color-mix 派生淡色底，仅 ||文字|| 遮字块使用）。强调色不设中间变量：
+ * .ak-hl-<色名> 类直接消费 ak-ui 官方调色板 --ak-color-<色名>（色名即官方色名，见约定 11/12） */
+:root {
+  --hl-tint: 22%;
+}
+
 /**
  * 映射到 VitePress 主题变量（亮色）
  * -------------------------------------------------------------------------- */
@@ -373,7 +379,8 @@ html .vp-doc h3 {
 }
 
 html .vp-doc h1 {
-  font-size: clamp(2.8rem, 5vw, 4.2rem);
+  /* h1 收敛至与 h2(24px)/h3(20px)/h4(18px) 均衡的阶梯（桌面约 1.7 倍、移动 1.3 倍，不再断崖） */
+  font-size: clamp(2rem, 3.5vw, 2.5rem);
   /* 行高对齐中文阅读舒适区间（vpb 默认 0.98 过挤，中文需 1.15+） */
   line-height: 1.18;
 }
@@ -390,6 +397,16 @@ html .vpb-page-title {
   color: var(--vp-c-text-1);
   /* 多行标题（frontmatter title 用 YAML 块标量换行）在此处真实换行显示 */
   white-space: pre-line;
+}
+
+/* 三处 h1 统一收敛字号，与正文 h2(24px)/h3(20px)/h4(18px) 形成均衡阶梯：
+ * 首页大标题（display-title）略高一档（36~48px），文档 h1 与文章页标题（page-title）同级（32~40px） */
+html .vpb-display-title {
+  font-size: clamp(2.25rem, 4vw, 3rem);
+}
+
+html .vpb-page-title {
+  font-size: clamp(2rem, 3.5vw, 2.5rem);
 }
 
 /* 文本选中：ak 深蓝底白字（方舟界面风格） */
@@ -557,6 +574,18 @@ html .vpb-page-title {
   letter-spacing: normal;
 }
 
+/* 文档/正文 H1（# 标题）上下间距均衡：默认 h1 无 margin、且 h2 自带 48px 上距，
+ * 导致 H1 上方贴紧前块、下方与 h2 之间过宽。上 2.5rem / 下 1.25rem 补齐呼吸，
+ * h1 后紧跟的 h2 收紧为 1.5rem（margin 折叠取较大值，下方与上方视觉均衡） */
+.vp-doc h1 {
+  margin-top: 2.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.vp-doc h1 + h2 {
+  margin-top: 1.5rem;
+}
+
 /* 文档 h2/h3 左侧品牌蓝条装饰（直角） */
 .vp-doc h2 {
   position: relative;
@@ -614,6 +643,89 @@ html .vpb-page-title {
  * 且非中文品牌文案，统一隐藏显示（数据层不受影响） */
 .VPDocFooter .last-updated {
   display: none;
+}
+
+/* 内容标记（theme/ak-inline.js 语法，全站 + 工单时间线 text 共用）：
+ * [[色:文字]] 彩色强调 + ||文字|| 色块悬停显示：
+ * - [[色:文字]]：行内代码同款强调块（等宽字 + 1px 描边 + 淡色底 + 辉光），描边/底色/辉光/文字
+ *   颜色均随色变（色名为 ak-ui 官方调色板 --ak-color-* 的 14 色：white/black/low/basic/primary/
+ *   secondary/advanced/accent/blue/yellow/dark-blue/light-blue/gray/dark），内容按行内 Markdown
+ *   再解析：可内嵌 **粗体**、*斜体*（按各自默认色渲染）、`代码`（随强调色）或再嵌 [[色:文字]]
+ *   嵌套强调（嵌套强调去除块外观、仅文字随色变，见下方 .ak-hl .ak-hl）
+ * - ||文字||：默认代码外观（ak 主蓝），文字透明遮字，鼠标悬停才显示（明暗双主题经 color-mix 自动适配） */
+.ak-hl {
+  padding: 0.1em 0.45em;
+  border: 1px solid var(--ak-color-primary);
+  border-radius: 3px;
+  font-family: var(--ak-font-mono, monospace);
+  font-size: inherit;
+  line-height: inherit;
+  font-weight: 600;
+  background-color: color-mix(in srgb, var(--ak-color-primary) var(--hl-tint), transparent);
+  box-shadow: 0 0 4px var(--vp-c-shadow-brand);
+}
+
+/* 各强调色（ak-ui 官方调色板 --ak-color-* 的 14 色，类名=色名）：描边/底色/辉光/文字颜色均随色变 */
+.ak-hl-white { border-color: var(--ak-color-white); background-color: color-mix(in srgb, var(--ak-color-white) var(--hl-tint), transparent); box-shadow: 0 0 4px color-mix(in srgb, var(--ak-color-white) 40%, transparent); color: var(--ak-color-white); }
+.ak-hl-black { border-color: var(--ak-color-black); background-color: color-mix(in srgb, var(--ak-color-black) var(--hl-tint), transparent); box-shadow: 0 0 4px color-mix(in srgb, var(--ak-color-black) 40%, transparent); color: var(--ak-color-black); }
+.ak-hl-low { border-color: var(--ak-color-low); background-color: color-mix(in srgb, var(--ak-color-low) var(--hl-tint), transparent); box-shadow: 0 0 4px color-mix(in srgb, var(--ak-color-low) 40%, transparent); color: var(--ak-color-low); }
+.ak-hl-basic { border-color: var(--ak-color-basic); background-color: color-mix(in srgb, var(--ak-color-basic) var(--hl-tint), transparent); box-shadow: 0 0 4px color-mix(in srgb, var(--ak-color-basic) 40%, transparent); color: var(--ak-color-basic); }
+.ak-hl-primary { border-color: var(--ak-color-primary); background-color: color-mix(in srgb, var(--ak-color-primary) var(--hl-tint), transparent); box-shadow: 0 0 4px color-mix(in srgb, var(--ak-color-primary) 40%, transparent); color: var(--ak-color-primary); }
+.ak-hl-secondary { border-color: var(--ak-color-secondary); background-color: color-mix(in srgb, var(--ak-color-secondary) var(--hl-tint), transparent); box-shadow: 0 0 4px color-mix(in srgb, var(--ak-color-secondary) 40%, transparent); color: var(--ak-color-secondary); }
+.ak-hl-advanced { border-color: var(--ak-color-advanced); background-color: color-mix(in srgb, var(--ak-color-advanced) var(--hl-tint), transparent); box-shadow: 0 0 4px color-mix(in srgb, var(--ak-color-advanced) 40%, transparent); color: var(--ak-color-advanced); }
+.ak-hl-accent { border-color: var(--ak-color-accent); background-color: color-mix(in srgb, var(--ak-color-accent) var(--hl-tint), transparent); box-shadow: 0 0 4px color-mix(in srgb, var(--ak-color-accent) 40%, transparent); color: var(--ak-color-accent); }
+.ak-hl-blue { border-color: var(--ak-color-blue); background-color: color-mix(in srgb, var(--ak-color-blue) var(--hl-tint), transparent); box-shadow: 0 0 4px color-mix(in srgb, var(--ak-color-blue) 40%, transparent); color: var(--ak-color-blue); }
+.ak-hl-yellow { border-color: var(--ak-color-yellow); background-color: color-mix(in srgb, var(--ak-color-yellow) var(--hl-tint), transparent); box-shadow: 0 0 4px color-mix(in srgb, var(--ak-color-yellow) 40%, transparent); color: var(--ak-color-yellow); }
+.ak-hl-dark-blue { border-color: var(--ak-color-dark-blue); background-color: color-mix(in srgb, var(--ak-color-dark-blue) var(--hl-tint), transparent); box-shadow: 0 0 4px color-mix(in srgb, var(--ak-color-dark-blue) 40%, transparent); color: var(--ak-color-dark-blue); }
+.ak-hl-light-blue { border-color: var(--ak-color-light-blue); background-color: color-mix(in srgb, var(--ak-color-light-blue) var(--hl-tint), transparent); box-shadow: 0 0 4px color-mix(in srgb, var(--ak-color-light-blue) 40%, transparent); color: var(--ak-color-light-blue); }
+.ak-hl-gray { border-color: var(--ak-color-gray); background-color: color-mix(in srgb, var(--ak-color-gray) var(--hl-tint), transparent); box-shadow: 0 0 4px color-mix(in srgb, var(--ak-color-gray) 40%, transparent); color: var(--ak-color-gray); }
+.ak-hl-dark { border-color: var(--ak-color-dark); background-color: color-mix(in srgb, var(--ak-color-dark) var(--hl-tint), transparent); box-shadow: 0 0 4px color-mix(in srgb, var(--ak-color-dark) 40%, transparent); color: var(--ak-color-dark); }
+
+/* 内嵌语法元素：**粗体**、*斜体* 按各自默认色渲染（不随强调色）；`代码` 继承块文字色随强调色
+ * （强调色即用于改变代码模块颜色，见约定 11/12） */
+.ak-hl strong,
+.ak-hl em {
+  color: var(--vp-c-text-1);
+}
+.ak-hl code {
+  color: inherit;
+}
+
+/* 嵌套强调（强调块内再嵌 [[色:文字]]）：去除块外观、仅保留文字随色变——避免层层套块，
+ * 嵌套强调只用于给块内文字单独着色（如 [[primary:...[[accent:文字]]...]]） */
+.ak-hl .ak-hl {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  font-family: inherit;
+  font-weight: inherit;
+}
+
+/* 色块悬停显示：默认遮字（色块同代码外观），hover 显示文字并提亮 */
+.ak-spoiler {
+  padding: 0.1em 0.45em;
+  border: 1px solid var(--ak-color-primary);
+  border-radius: 3px;
+  font-family: var(--ak-font-mono, monospace);
+  font-size: inherit;
+  line-height: inherit;
+  font-weight: 600;
+  background-color: color-mix(in srgb, var(--ak-color-primary) var(--hl-tint), transparent);
+  color: transparent;
+  box-shadow: 0 0 4px var(--vp-c-shadow-brand);
+  cursor: pointer;
+  user-select: none;
+  transition: color var(--ak-motion-base) var(--ak-ease-standard),
+    background-color var(--ak-motion-base) var(--ak-ease-standard),
+    box-shadow var(--ak-motion-base) var(--ak-ease-standard);
+}
+
+.ak-spoiler:hover {
+  color: inherit;
+  background-color: color-mix(in srgb, var(--ak-color-primary) 12%, transparent);
+  box-shadow: 0 0 8px var(--vp-c-shadow-brand-strong);
 }
 
 /**

@@ -1,7 +1,8 @@
 <script setup>
-import { computed, provide } from 'vue';
+import { computed, provide, ref, onMounted, nextTick } from 'vue';
 import { useData, useRoute, useRouter } from 'vitepress';
 import MarkdownIt from 'markdown-it';
+import { akInlinePlugin } from '../../.vitepress/theme/ak-inline.js';
 import './element-plus-styles.js';
 import {
   ID_INJECTION_KEY,
@@ -18,10 +19,12 @@ import {
 provide(ID_INJECTION_KEY, { prefix: 1024, current: 0 });
 provide(ZINDEX_INJECTION_KEY, { current: 0 });
 
-// 时间轴 text 支持行内 Markdown（**粗体**、*斜体*、`行内代码` 等）
+// 时间轴 text 支持行内 Markdown（**粗体**、*斜体*、`行内代码`、[[色:文字]] 强调、||文字|| 色块悬停）
+// 与全站 VitePress Markdown 共用同一内容标记插件（.vitepress/theme/ak-inline.js），两端语法一致；
 // 仅渲染行内语法；禁用 HTML 规则防注入（原样标签会被转义输出）
 const md = new MarkdownIt({ html: false, breaks: true, linkify: false });
 md.disable(['html_inline', 'html_block']);
+md.use(akInlinePlugin);
 
 function renderUpdate(text) {
   return md.renderInline(text ?? '');
@@ -40,6 +43,26 @@ const priorityTag = { 高优先级: 'danger', 中优先级: 'warning', 低优先
 function onBack() {
   router.go('/support/tickets/');
 }
+
+// 时间轴仅展开最近 7 条（updates 首条即最新）；超过 7 条时以内部滚动访问其余条目。
+// 滚动上限按前 7 条实测高度设置（含各条目自身间距），避免固定值导致条目被半裁。
+const timelineEl = ref(null);
+const timelineMaxHeight = ref('');
+
+onMounted(async () => {
+  await nextTick();
+  // el-timeline 是组件，ref 拿到的是组件实例；$el 才是渲染出的 ul 根元素
+  const el = timelineEl.value?.$el;
+  if (!el) return;
+  const items = el.querySelectorAll('.el-timeline-item');
+  if (items.length <= 7) return;
+  let h = 0;
+  for (let i = 0; i < 7; i++) h += items[i].getBoundingClientRect().height;
+  // 加上 ul 自身上下 padding，保证前 7 条完整可见、第 8 条正好裁出滚动区
+  const cs = getComputedStyle(el);
+  h += (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0);
+  timelineMaxHeight.value = `${Math.ceil(h)}px`;
+});
 </script>
 
 <template>
@@ -61,7 +84,13 @@ function onBack() {
       <el-descriptions-item label="创建时间">{{ frontmatter.createdAt }}</el-descriptions-item>
     </el-descriptions>
 
-    <el-timeline v-if="frontmatter.updates?.length" class="ticket-header__timeline">
+    <el-timeline
+      ref="timelineEl"
+      v-if="frontmatter.updates?.length"
+      class="ticket-header__timeline"
+      :class="{ 'is-done': ['已完成', '已关闭'].includes(frontmatter.status) }"
+      :style="timelineMaxHeight ? { maxHeight: timelineMaxHeight, overflowY: 'auto' } : undefined"
+    >
       <el-timeline-item v-for="u in frontmatter.updates" :key="u.time" :timestamp="u.time">
         <span v-html="renderUpdate(u.text)" />
       </el-timeline-item>
@@ -114,6 +143,8 @@ function onBack() {
   border-left: 3px solid var(--ak-primary);
   border-radius: 0;
   box-shadow: 0 2px 6px var(--vp-c-shadow);
+  /* 超过 7 条时内部滚动（上限由脚本按前 7 条实测高度设置），滚动到边界不带动整页 */
+  overscroll-behavior: contain;
   /* 节点/尾线基础色统一为 ak 蓝（Element Plus 通过该变量取色） */
   --el-timeline-node-color: var(--ak-primary);
 }
@@ -162,7 +193,7 @@ function onBack() {
   box-shadow: 0 0 4px var(--ak-primary);
 }
 
-/* 最新一条（updates 首条即最新）：ak 黄高亮 + 呼吸脉冲 */
+/* 最新一条（updates 首条即最新）：ak 黄高亮 + 呼吸脉冲（仅活跃工单） */
 .ticket-header__timeline :deep(.el-timeline-item:first-child .el-timeline-item__node) {
   border-color: var(--ak-yellow);
   box-shadow: 0 0 10px var(--vp-c-shadow-warning), inset 0 0 6px var(--vp-c-shadow-warning);
@@ -172,6 +203,18 @@ function onBack() {
   background-color: var(--ak-yellow);
   box-shadow: 0 0 6px var(--ak-yellow);
   animation: ak-timeline-node-pulse 2s ease-in-out infinite alternate;
+}
+
+/* 终态工单（已完成/已关闭）：不再有进行中的活跃信号，最新一项与先前项统一为 ak 蓝、取消脉冲 */
+.ticket-header__timeline.is-done :deep(.el-timeline-item:first-child .el-timeline-item__node) {
+  border-color: var(--ak-primary);
+  box-shadow: 0 0 6px var(--vp-c-shadow-brand), inset 0 0 4px var(--vp-c-shadow-brand);
+}
+
+.ticket-header__timeline.is-done :deep(.el-timeline-item:first-child .el-timeline-item__node::after) {
+  background-color: var(--ak-primary);
+  box-shadow: 0 0 4px var(--ak-primary);
+  animation: none;
 }
 
 @keyframes ak-timeline-node-pulse {
@@ -184,21 +227,35 @@ function onBack() {
   }
 }
 
-/* 时间戳：终端式时间码（▸ 前缀 + 字距） */
+/* 时间戳：置于内容左侧（wrapper 改左右两列），终端式时间码（▸ 前缀 + 加大字号） */
+.ticket-header__timeline :deep(.el-timeline-item__wrapper) {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+
 .ticket-header__timeline :deep(.el-timeline-item__timestamp) {
-  font-size: 12px;
-  letter-spacing: 0.06em;
-  color: var(--vp-c-text-3);
+  flex: 0 0 auto;
+  order: -1; /* placement=bottom 时时间戳在 DOM 中位于内容之后，强制排到最左 */
+  min-width: 8.4em; /* 固定列宽（13 字符等宽时间码，约 8.4em），内容列稳定对齐 */
+  margin-top: 0; /* 消除 is-bottom 的时间戳下移间距 */
+  font-family: var(--ak-font-pixel); /* 终端等宽字体栈（设备自带，无需网络加载，许可证无忧） */
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--vp-c-text-2);
+  white-space: nowrap;
 }
 
 .ticket-header__timeline :deep(.el-timeline-item__timestamp.is-bottom::before) {
   content: "▸ ";
   color: var(--ak-primary);
-  font-size: 11px;
+  font-size: 12px;
 }
 
-/* 内容 */
 .ticket-header__timeline :deep(.el-timeline-item__content) {
+  flex: 1;
+  min-width: 0;
   color: var(--vp-c-text-1);
   line-height: 1.6;
 }
