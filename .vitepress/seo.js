@@ -117,8 +117,16 @@ export function buildPageHeadTags({ seo, base, cleanUrls, pageData }) {
 
   // 来源标注：全站统一出处（Organization / WebSite），由 seo 变量派生，代码不硬编码。
   // 保证所有页面类型（WebSite / CollectionPage / Article）的 JSON-LD 都向搜索引擎标明来源为站点本身。
+  // Organization 携带品牌备选名（alternateName，来自 .env VITE_SEO_ALT_NAMES）：帮助搜索引擎把
+  //「泠域存储 / LAYOSERVE」等品牌词与本站身份关联——本站域名注册域为 raincrat.top（RAINCRAT雨绘巷），
+  // 与品牌「LAYOSERVE泠域存储」不一致，Bing 按域名归并站点身份时容易显示父域而非品牌。
   const sourceUrl = siteUrl ? `${siteUrl.replace(/\/+$/, '')}/` : undefined;
-  const source = { '@type': 'Organization', name: siteName, ...(sourceUrl ? { url: sourceUrl } : {}) };
+  const source = {
+    '@type': 'Organization',
+    name: siteName,
+    alternateName: alternateNames,
+    ...(sourceUrl ? { url: sourceUrl } : {}),
+  };
   const website = { '@type': 'WebSite', name: siteName, ...(sourceUrl ? { url: sourceUrl } : {}) };
 
   // 结构化数据：根首页 WebSite，目录页 CollectionPage，内容页 Article
