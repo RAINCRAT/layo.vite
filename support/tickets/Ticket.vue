@@ -62,9 +62,6 @@ const TITLE_MAX_WIDTH = 320;
 // 列宽后尾留白：网络字体异步加载完成后字宽会变化，仅靠实测宽 + 2px 会在字体就绪后
 // 重新触发省略号；增加固定安全余量，保证字体加载前后各列都不被省略（标题列同样经此余量）
 const MEASURE_PAD = 12;
-// 工单号列最小保障宽度：标准工单号格式（如 AD-260805-01）在此宽度内不会被截断。
-// 首次测量可能因字体未加载完成而低估列宽，取测量值与下限的较大值，确保该列永不出现省略号
-// const ID_MIN_WIDTH = 128; // 已注释：不再强制最小宽度，与其余列一致走纯自适应 + 后尾留白
 // 依次对应表头列：id/title/status/priority/channel/reporter/createdAt/action
 const MEASURE_KEYS = ['id', 'title', 'status', 'priority', 'channel', 'reporter', 'createdAt', 'action'];
 const colWidth = reactive({ id: undefined, status: undefined, priority: undefined, channel: undefined, reporter: undefined, createdAt: undefined, action: undefined });
@@ -92,8 +89,6 @@ function measureColumns() {
     const key = MEASURE_KEYS[i];
     if (!key || w <= 2) return;
     if (key === 'title') titleMinWidth.value = Math.min(w, TITLE_MAX_WIDTH);
-    // 工单号列不再取测量值与下限的较大值（原强制最小宽度已注释），与其他列一致走纯自适应 + 后尾留白
-    // else if (key === 'id') colWidth.id = Math.max(w, ID_MIN_WIDTH);
     else colWidth[key] = w;
   });
 }
