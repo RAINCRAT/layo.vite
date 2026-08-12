@@ -116,7 +116,8 @@ export default defineConfig({
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     // 启用 git 时间戳：sitemap.xml 的 <lastmod> 与 JSON-LD dateModified 由此填充
-    //（Bing Webmaster Guidelines 要求 sitemap 提供新鲜度信号；git 不可用时自动降级为空）
+    //（Bing Webmaster Guidelines 要求 sitemap 提供新鲜度信号；git 不可用时自动降级为空）。
+    // 注意：页面底部的 "Last updated" 显示已由 theme/style.css 隐藏（仅保留 SEO 数据用途）
     lastUpdated: true,
     // 深色模式开关标签（覆盖默认的 "Appearance"）
     darkModeSwitchLabel: '深色模式',

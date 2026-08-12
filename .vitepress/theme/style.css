@@ -608,6 +608,14 @@ html .vpb-page-title {
   background-color: transparent;
 }
 
+/* 页脚「最后更新」显示隐藏：themeConfig.lastUpdated 仅为 sitemap <lastmod> 与
+ * JSON-LD dateModified 提供 git 时间戳（SEO 数据，见 config.js），页面底部渲染的
+ * 英文 "Last updated" 与各页已有时间信息（VPB 发布日期、工单 updates 时间线）重复，
+ * 且非中文品牌文案，统一隐藏显示（数据层不受影响） */
+.VPDocFooter .last-updated {
+  display: none;
+}
+
 /**
  * Component: Algolia
  * -------------------------------------------------------------------------- */

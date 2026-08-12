@@ -37,13 +37,6 @@ const isTicketPage = computed(() => route.path.startsWith('/assets/tickets/'));
 const statusTag = { 待处理: 'warning', 处理中: 'primary', 已完成: 'success', 已关闭: 'info' };
 const priorityTag = { 高优先级: 'danger', 中优先级: 'warning', 低优先级: 'info' };
 
-// 更新时间：取 updates 时间轴中最新一条（"YYYY-MM-DD HH:mm" 字符串可直接比较），无 updates 时回退 frontmatter.updatedAt
-const updatedTime = computed(() => {
-  const ups = frontmatter.value.updates;
-  if (!Array.isArray(ups) || !ups.length) return frontmatter.value.updatedAt;
-  return ups.reduce((max, u) => (u.time > max ? u.time : max), ups[0].time);
-});
-
 function onBack() {
   router.go('/support/tickets/');
 }
@@ -66,7 +59,6 @@ function onBack() {
       <el-descriptions-item label="工单号">{{ frontmatter.id }}</el-descriptions-item>
       <el-descriptions-item label="来源">{{ frontmatter.reporter }}</el-descriptions-item>
       <el-descriptions-item label="创建时间">{{ frontmatter.createdAt }}</el-descriptions-item>
-      <el-descriptions-item label="更新时间">{{ updatedTime }}</el-descriptions-item>
     </el-descriptions>
 
     <el-timeline v-if="frontmatter.updates?.length" class="ticket-header__timeline">
