@@ -134,9 +134,12 @@ watch(
       </el-tag>
     </div>
 
-    <el-descriptions :column="1" border class="ticket-header__meta">
+    <!-- 元信息表：column=2 每行「字段名|值|字段名|值」两对列（与正文键值表一致）；
+         窄容器由 theme/ticket-kv-stack.js 加 is-meta-stacked 类堆叠为一对列 -->
+    <el-descriptions :column="2" border class="ticket-header__meta">
       <el-descriptions-item label="工单号">{{ frontmatter.id }}</el-descriptions-item>
       <el-descriptions-item label="来源">{{ frontmatter.reporter }}</el-descriptions-item>
+      <el-descriptions-item label="负责人">{{ frontmatter.assignee }}</el-descriptions-item>
       <el-descriptions-item label="创建时间">{{ frontmatter.createdAt }}</el-descriptions-item>
     </el-descriptions>
 

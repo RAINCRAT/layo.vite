@@ -1794,6 +1794,35 @@ html .vpb-results-panel::before {
   letter-spacing: 0.05em;
 }
 
+/* 元信息表列布局与正文键值表一致（column=2，每行「字段名|值|字段名|值」两对列）：
+ * 测量态（is-meta-measuring）按内容固有宽度渲染，量出两对列并排所需宽度；
+ * 窄容器（is-meta-stacked，由 theme/ticket-kv-stack.js 加类）整表堆叠为一对列——
+ * 每行 4 个单元格 [字段A,值A,字段B,值B] 经 grid 自动重排为两行两列，DOM 顺序不变。 */
+.is-tickets-page .ticket-header__meta.is-meta-measuring .el-descriptions__table {
+  display: inline-table !important;
+  width: max-content !important;
+  max-width: none !important;
+}
+
+.is-tickets-page .ticket-header__meta.is-meta-stacked .el-descriptions__table,
+.is-tickets-page .ticket-header__meta.is-meta-stacked .el-descriptions__table tbody {
+  display: block;
+  width: 100%;
+}
+
+.is-tickets-page .ticket-header__meta.is-meta-stacked .el-descriptions__table tbody tr {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+}
+
+/* 堆叠后 border-collapse 失效：cell 改行分隔单线（去掉四边框，避免双线）；
+ * label 底色（上方 .el-descriptions__label）与值列间距由 padding 保持 */
+.is-tickets-page .ticket-header__meta.is-meta-stacked .el-descriptions__cell {
+  border: 0;
+  border-bottom: 1px solid var(--vp-c-divider);
+  padding: 8px 12px;
+}
+
 /* ---- G8. 列表页终端标题行（纯 CSS 伪元素，呼应详情页时间轴 "// 事项碎片"） ---- */
 .is-tickets-page .ticket-demo::before {
   content: "// WE KNOW THE SECRETS.";

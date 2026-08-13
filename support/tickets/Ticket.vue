@@ -62,9 +62,9 @@ const TITLE_MAX_WIDTH = 320;
 // 列宽后尾留白：网络字体异步加载完成后字宽会变化，仅靠实测宽 + 2px 会在字体就绪后
 // 重新触发省略号；增加固定安全余量，保证字体加载前后各列都不被省略（标题列同样经此余量）
 const MEASURE_PAD = 12;
-// 依次对应表头列：id/title/status/priority/channel/reporter/createdAt/action
-const MEASURE_KEYS = ['id', 'title', 'status', 'priority', 'channel', 'reporter', 'createdAt', 'action'];
-const colWidth = reactive({ id: undefined, status: undefined, priority: undefined, channel: undefined, reporter: undefined, createdAt: undefined, action: undefined });
+// 依次对应表头列：id/title/status/priority/channel/reporter/assignee/createdAt/action
+const MEASURE_KEYS = ['id', 'title', 'status', 'priority', 'channel', 'reporter', 'assignee', 'createdAt', 'action'];
+const colWidth = reactive({ id: undefined, status: undefined, priority: undefined, channel: undefined, reporter: undefined, assignee: undefined, createdAt: undefined, action: undefined });
 const titleMinWidth = ref(160);
 
 function measureColumns() {
@@ -161,6 +161,7 @@ function onViewDetail(row) {
         </template>
       </el-table-column>
       <el-table-column prop="reporter" label="来源" :width="colWidth.reporter" show-overflow-tooltip />
+      <el-table-column prop="assignee" label="负责人" :width="colWidth.assignee" show-overflow-tooltip />
       <el-table-column prop="createdAt" label="提交时间" :width="colWidth.createdAt" show-overflow-tooltip />
       <el-table-column label="操作" :width="colWidth.action">
         <template #default="{ row }">

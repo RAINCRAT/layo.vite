@@ -16,6 +16,7 @@ export default createContentLoader('assets/tickets/*.md', {
         priority: frontmatter.priority,
         channel: frontmatter.channel,
         reporter: frontmatter.reporter,
+        assignee: frontmatter.assignee,
         createdAt: frontmatter.createdAt,
       }))
       .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1)),
